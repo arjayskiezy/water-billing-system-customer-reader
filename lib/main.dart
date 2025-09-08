@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'features/authentication/presentation/providers/auth_provider.dart';
-import 'features/authentication/presentation/pages/login_page.dart';
+import 'features/authentication/auth/auth_wrapper.dart';
 
 void main() {
   runApp(
-    MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider()..loadUser(),
       child: const MyApp(),
     ),
   );
@@ -18,10 +18,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Waterworks Digital Billing System',
-      themeMode: ThemeMode.system,
+      title: 'Waterworks Billing',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const LoginPage(),
+      home: const AuthWrapper(),
     );
   }
 }

@@ -34,12 +34,8 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (authProvider.loggedIn)
-                Text(
-                  'Welcome, ${authProvider.userName}!',
-                  style: const TextStyle(fontSize: 18),
-                )
+                const CircularProgressIndicator()
               else ...[
-                // LOGIN: only meter number + password
                 if (isLogin) ...[
                   TextField(
                     controller: _meterNumberController,
@@ -54,9 +50,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: const InputDecoration(labelText: 'Password'),
                     obscureText: true,
                   ),
-                ]
-                // REGISTRATION: full details
-                else ...[
+                ] else ...[
                   TextField(
                     controller: _firstNameController,
                     decoration: const InputDecoration(labelText: 'First Name'),
@@ -95,8 +89,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
                 const SizedBox(height: 20),
-
-                // Action button
                 isLoading
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
@@ -145,9 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                         },
                         child: Text(isLogin ? 'Login' : 'Register'),
                       ),
-
                 const SizedBox(height: 10),
-                // Toggle login/register
                 TextButton(
                   onPressed: () {
                     setState(() => isLogin = !isLogin);
