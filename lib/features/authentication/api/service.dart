@@ -5,13 +5,13 @@ class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8000/api';
 
   static Future<Map<String, dynamic>?> login(
-    String meterNumber,
+    String accountNumber,
     String password,
   ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/login'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'meterNumber': meterNumber, 'password': password}),
+      body: jsonEncode({'accountNumber': accountNumber, 'password': password}),
     );
 
     if (response.statusCode == 200) {

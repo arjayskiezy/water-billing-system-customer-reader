@@ -31,17 +31,67 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Login with meter number + password
-  Future<bool> login(String meterNumber, String password) async {
-    final response = await ApiService.login(meterNumber, password);
+  // Future<String> login(String accountNumber, String password) async {
+  //   // Custom test data for admin
+  //   const adminAccountNumber = 'admin';
+  //   const adminPassword = 'admin123';
+  //
+  //   // Check if the login is for admin first
+  //   if (accountNumber == adminAccountNumber && password == adminPassword) {
+  //     // Return role as 'admin'
+  //     return 'admin';
+  //   }
+  //
+  //   // Regular user login via API
+  //   final response = await ApiService.login(accountNumber, password);
+  //
+  //   if (response != null && response['status'] == 'success') {
+  //     _loggedIn = true;
+  //     _firstName = response['firstName'];
+  //     _lastName = response['lastName'];
+  //     _accountNumber = response['accountNumber'];
+  //     _meterNumber = response['meterNumber'];
+  //
+  //     // Save to local storage
+  //     await _storage.saveUser(
+  //       firstName: _firstName!,
+  //       lastName: _lastName!,
+  //       accountNumber: _accountNumber!,
+  //       meterNumber: _meterNumber!,
+  //     );
+  //
+  //     notifyListeners();
+  //     return 'user'; // <- return 'user' instead of true
+  //   }
+  //
+  //   // Login failed
+  //   return 'error';
+  // }
+  Future<String> login(String accountNumber, String password) async {
+    // Custom test data for admin
+    const adminAccountNumber = '123';
+    const adminPassword = 'admin123';
 
-    if (response != null && response['status'] == 'success') {
+    // Check if the login is for admin first
+    if (accountNumber == adminAccountNumber && password == adminPassword) {
+      // Return role as 'admin'
+      return 'admin';
+    }
+
+    // Dummy login for a regular user
+    const dummyUserAccountNumber = '123';
+    const dummyUserPassword = 'user123';
+
+    if (accountNumber == dummyUserAccountNumber &&
+        password == dummyUserPassword) {
+      // Simulate setting user details
       _loggedIn = true;
-      _firstName = response['firstName'];
-      _lastName = response['lastName'];
-      _accountNumber = response['accountNumber'];
-      _meterNumber = response['meterNumber'];
+      _firstName = 'John';
+      _lastName = 'Doe';
+      _accountNumber = 12345;
+      _meterNumber = 12345;
 
-      // Save to local storage
+      // Optionally save to local storage
       await _storage.saveUser(
         firstName: _firstName!,
         lastName: _lastName!,
@@ -50,9 +100,35 @@ class AuthProvider extends ChangeNotifier {
       );
 
       notifyListeners();
-      return true;
+      return 'user';
     }
-    return false;
+
+    /*
+  // Regular user login via API
+  final response = await ApiService.login(accountNumber, password);
+
+  if (response != null && response['status'] == 'success') {
+    _loggedIn = true;
+    _firstName = response['firstName'];
+    _lastName = response['lastName'];
+    _accountNumber = response['accountNumber'];
+    _meterNumber = response['meterNumber'];
+
+    // Save to local storage
+    await _storage.saveUser(
+      firstName: _firstName!,
+      lastName: _lastName!,
+      accountNumber: _accountNumber!,
+      meterNumber: _meterNumber!,
+    );
+
+    notifyListeners();
+    return 'user';
+  }
+  */
+
+    // Login failed
+    return 'error';
   }
 
   /// Register with full details
