@@ -7,6 +7,7 @@ import './BillingHistory/billing_history.dart';
 import './Usage/usage.dart';
 import './Announcements/announcement.dart';
 import '../LoginPage/login_page.dart';
+import './ReportIssue/report_issue.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -80,30 +81,82 @@ class DashboardPage extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Logout button
+                    // Report Issue button
                     IconButton(
-                      onPressed: () async {
-                        Provider.of<AuthProvider>(
+                      onPressed: () {
+                        // Navigate to Report Issue page
+                        Navigator.push(
                           context,
-                          listen: false,
-                        ).logout();
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                const ReportIssuePage(), // replace with your page
+                          ),
                         );
                       },
-                      icon: const Icon(Icons.logout),
+                      icon: const Icon(
+                        Icons.report_problem,
+                        color: Colors.blue,
+                      ),
+                      tooltip: 'Report Issue',
+                    ),
+                    // Logout button
+                    // Logout button
+                    IconButton(
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Confirm Logout'),
+                              content: const Text(
+                                'Are you sure you want to log out?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(
+                                      context,
+                                    ).pop(); // close the dialog
+                                  },
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    // Perform logout
+                                    Provider.of<AuthProvider>(
+                                      context,
+                                      listen: false,
+                                    ).logout();
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (_) => const LoginPage(),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    'Logout',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.logout, color: Colors.red),
                     ),
                   ],
                 ),
               ),
             ),
+
             // --- Current Amount Due (dummy, you can bind with provider later) ---
             Card(
               color: Theme.of(context).colorScheme.surfaceVariant,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -132,7 +185,7 @@ class DashboardPage extends StatelessWidget {
                         Text(
                           '₱2840.50 PHP',
                           style: TextStyle(
-                            fontSize: 24,
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -148,7 +201,7 @@ class DashboardPage extends StatelessWidget {
                     Text(
                       'Due: September 25, 2025',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -283,6 +336,7 @@ class DashboardPage extends StatelessWidget {
             const SizedBox(height: 20),
 
             Card(
+              color: Theme.of(context).colorScheme.surfaceVariant,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),

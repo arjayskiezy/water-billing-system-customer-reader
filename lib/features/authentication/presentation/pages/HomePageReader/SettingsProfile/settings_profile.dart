@@ -47,7 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       radius: 20,
                       backgroundImage: AssetImage('assets/images/reader.jpg'),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 5),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,9 +177,18 @@ class _SettingsPageState extends State<SettingsPage> {
 
             // Buttons
             ElevatedButton.icon(
-              onPressed: () {
-                // Clear Local Data Action
-              },
+              onPressed: () => _showConfirmationDialog(
+                context,
+                title: 'Force Sync',
+                content: 'Do you want to force sync all data now?',
+                onConfirm: () {
+                  Navigator.pop(context);
+                  // Add sync logic here
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Data synced successfully!')),
+                  );
+                },
+              ),
               icon: const Icon(Icons.sync),
               label: const Text('Force Sync All Data'),
               style: ElevatedButton.styleFrom(
@@ -194,9 +203,18 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
-              onPressed: () {
-                // Clear Local Data Action
-              },
+              onPressed: () => _showConfirmationDialog(
+                context,
+                title: 'Clear Local Data',
+                content: 'Are you sure you want to clear all local data?',
+                onConfirm: () {
+                  Navigator.pop(context);
+                  // Add clear local data logic here
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Local data cleared!')),
+                  );
+                },
+              ),
               icon: const Icon(Icons.delete_forever, color: Colors.red),
               label: const Text(
                 'Clear Local Data',
@@ -212,12 +230,17 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
+              onPressed: () => _showConfirmationDialog(
+                context,
+                title: 'Logout',
+                content: 'Are you sure you want to logout?',
+                onConfirm: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                  );
+                },
+              ),
               icon: const Icon(Icons.logout, color: Colors.white),
               label: const Text(
                 'Logout',
@@ -235,6 +258,29 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Confirmation dialog
+  void _showConfirmationDialog(
+    BuildContext context, {
+    required String title,
+    required String content,
+    required VoidCallback onConfirm,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(onPressed: onConfirm, child: const Text('Confirm')),
+        ],
       ),
     );
   }
