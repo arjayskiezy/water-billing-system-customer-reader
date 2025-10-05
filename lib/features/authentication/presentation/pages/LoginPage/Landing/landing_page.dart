@@ -56,7 +56,7 @@ class WaterBillingLandingPage extends StatelessWidget {
                       // Log In Button
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
+                          Navigator.pop(
                             context,
                             MaterialPageRoute(
                               builder: (context) => LoginPage(), // 👈 page 1
@@ -86,7 +86,7 @@ class WaterBillingLandingPage extends StatelessWidget {
                       // More Button (opposite style)
                       OutlinedButton(
                         onPressed: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => MoreInfoPage(), // 👈 page 1
@@ -166,7 +166,7 @@ class WaterBillingLandingPage extends StatelessWidget {
                   Center(
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.push(
+                        Navigator.pop(
                           context,
                           MaterialPageRoute(
                             builder: (context) => LoginPage(), // 👈 page 1

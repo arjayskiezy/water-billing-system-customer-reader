@@ -93,17 +93,17 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
               ),
               elevation: 2,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: TextField(
                   controller: _descriptionController,
-                  maxLines: 6,
+                  maxLines: 4,
                   textAlignVertical: TextAlignVertical.top,
                   decoration: InputDecoration(
                     border: InputBorder.none,
-                    labelText: 'Issue Description',
+                    labelText: 'Description',
                     labelStyle: TextStyle(
-                      color: colors.primary,
-                      fontWeight: FontWeight.bold,
+                      color: colors.tertiary,
+                      fontWeight: FontWeight.w100,
                     ),
                     hintText: 'Describe the problem in detail...',
                     hintStyle: TextStyle(color: colors.onSurfaceVariant),

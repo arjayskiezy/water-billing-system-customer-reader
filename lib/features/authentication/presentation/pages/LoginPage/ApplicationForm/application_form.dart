@@ -131,9 +131,11 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
           alignment: Alignment.centerRight,
           child: ElevatedButton(
             onPressed: () {
-              setState(() {
-                _currentStep++;
-              });
+              if (_formKey.currentState!.validate()) {
+                setState(() {
+                  _currentStep++;
+                });
+              }
             },
             child: const Text('Next'),
           ),
@@ -245,7 +247,18 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
               child: const Text('Back'),
             ),
             ElevatedButton(
-              onPressed: _submitForm,
+              onPressed: () {
+                // ✅ Validate before submission
+                if (_formKey.currentState!.validate()) {
+                  _submitForm();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill in all required fields.'),
+                    ),
+                  );
+                }
+              },
               child: const Text('Submit Application'),
             ),
           ],

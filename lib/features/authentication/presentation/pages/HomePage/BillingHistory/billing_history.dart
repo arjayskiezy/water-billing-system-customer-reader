@@ -88,36 +88,49 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
       backgroundColor: Colors.grey[100],
       body: Column(
         children: [
-          // Filter chips
+          // Filter chips with consistent rounded shape
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            child: Wrap(
-              spacing: 8,
-              children: [
-                ChoiceChip(
-                  label: const Text("All"),
-                  selected: _filter == "All",
-                  onSelected: (_) => setState(() => _filter = "All"),
-                  selectedColor: theme.colorScheme.primary.withOpacity(0.2),
-                  showCheckmark: false, // 👈 removes checkmark
+            child: Theme(
+              data: theme.copyWith(
+                chipTheme: theme.chipTheme.copyWith(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      17,
+                    ), // 👈 Rounded radius
+                  ),
                 ),
-                ChoiceChip(
-                  label: const Text("Paid"),
-                  selected: _filter == "Paid",
-                  onSelected: (_) => setState(() => _filter = "Paid"),
-                  selectedColor: theme.colorScheme.primary.withOpacity(0.2),
-                  showCheckmark: false, // 👈 removes checkmark
-                ),
-                ChoiceChip(
-                  label: const Text("Unpaid"),
-                  selected: _filter == "Unpaid",
-                  onSelected: (_) => setState(() => _filter = "Unpaid"),
-                  selectedColor: Colors.red[100],
-                  showCheckmark: false, // 👈 removes checkmark
-                ),
-              ],
+              ),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text("All"),
+                    selected: _filter == "All",
+                    onSelected: (_) => setState(() => _filter = "All"),
+                    selectedColor: theme.colorScheme.primary.withOpacity(0.2),
+                    showCheckmark: false,
+                  ),
+                  ChoiceChip(
+                    label: const Text("Paid"),
+                    selected: _filter == "Paid",
+                    onSelected: (_) => setState(() => _filter = "Paid"),
+                    selectedColor: theme.colorScheme.primary.withOpacity(0.2),
+                    showCheckmark: false,
+                  ),
+                  ChoiceChip(
+                    label: const Text("Unpaid"),
+                    selected: _filter == "Unpaid",
+                    onSelected: (_) => setState(() => _filter = "Unpaid"),
+                    selectedColor: Colors.red[100],
+                    showCheckmark: false,
+                  ),
+                ],
+              ),
             ),
           ),
+
+          // Billing history list
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -132,10 +145,8 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   color: item['paid']
-                      ? theme
-                            .colorScheme
-                            .primary // Paid = blue
-                      : Colors.red[400], // Unpaid = light red
+                      ? theme.colorScheme.primary
+                      : Colors.red[400],
                   elevation: 3,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -227,6 +238,7 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
                           ],
                         ),
                         const SizedBox(height: 12),
+
                         // Breakdown section
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

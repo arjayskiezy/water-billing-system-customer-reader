@@ -235,9 +235,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: 'Logout',
                 content: 'Are you sure you want to logout?',
                 onConfirm: () {
-                  Navigator.pushReplacement(
+                  Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false, // removes all previous routes
                   );
                 },
               ),
@@ -279,7 +280,13 @@ class _SettingsPageState extends State<SettingsPage> {
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
-          ElevatedButton(onPressed: onConfirm, child: const Text('Confirm')),
+          TextButton(
+            onPressed: onConfirm,
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red, // only affects text/icon color
+            ),
+            child: const Text('Confirm'),
+          ),
         ],
       ),
     );

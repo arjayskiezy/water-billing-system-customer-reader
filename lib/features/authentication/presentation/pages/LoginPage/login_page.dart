@@ -170,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () {
-                  Navigator.push(
+                  Navigator.pop(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ForgotPasswordPage(), // 👈 page 1

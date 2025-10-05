@@ -100,7 +100,6 @@ class DashboardPage extends StatelessWidget {
                       tooltip: 'Report Issue',
                     ),
                     // Logout button
-                    // Logout button
                     IconButton(
                       onPressed: () {
                         showDialog(
@@ -113,24 +112,26 @@ class DashboardPage extends StatelessWidget {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () {
-                                    Navigator.of(
-                                      context,
-                                    ).pop(); // close the dialog
-                                  },
+                                  onPressed: () => Navigator.of(context).pop(),
                                   child: const Text('Cancel'),
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    // Perform logout
+                                    // Perform logout logic
                                     Provider.of<AuthProvider>(
                                       context,
                                       listen: false,
                                     ).logout();
-                                    Navigator.of(context).pushReplacement(
+
+                                    // Close dialog first
+                                    Navigator.of(context).pop();
+
+                                    // Navigate to login and clear all previous routes
+                                    Navigator.of(context).pushAndRemoveUntil(
                                       MaterialPageRoute(
                                         builder: (_) => const LoginPage(),
                                       ),
+                                      (route) => false,
                                     );
                                   },
                                   child: const Text(
