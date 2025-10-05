@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/water_application_provider.dart';
+import '../login_page.dart';
 
 class WaterApplicationFormPage extends StatefulWidget {
   const WaterApplicationFormPage({super.key});
@@ -9,29 +12,30 @@ class WaterApplicationFormPage extends StatefulWidget {
 }
 
 class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
+  late WaterApplicationProvider provider;
   final _formKey = GlobalKey<FormState>();
 
   // Controllers
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _applicantController = TextEditingController();
-  final TextEditingController _spouseController = TextEditingController();
-  final TextEditingController _presentAddressController =
-      TextEditingController();
-  final TextEditingController _previousAddressController =
-      TextEditingController();
-  final TextEditingController _faucetLocationController =
-      TextEditingController();
-  final TextEditingController _additionalFaucetController =
-      TextEditingController();
+  final _emailController = TextEditingController();
+  final _applicantController = TextEditingController();
+  final _spouseController = TextEditingController();
+  final _presentAddressController = TextEditingController();
+  final _previousAddressController = TextEditingController();
+  final _faucetLocationController = TextEditingController();
+  final _additionalFaucetController = TextEditingController();
 
-  // Form state
-  String _applicationType = 'Residential';
-  String _houseMaterial = 'Wood';
-  String _ownershipStatus = 'Owned';
-  bool _interiorPlumbing = false;
-
-  // Step control
-  int _currentStep = 0;
+  @override
+  void initState() {
+    super.initState();
+    provider = WaterApplicationProvider();
+    _emailController.text = provider.email;
+    _applicantController.text = provider.applicantName;
+    _spouseController.text = provider.spouseName;
+    _presentAddressController.text = provider.presentAddress;
+    _previousAddressController.text = provider.previousAddress;
+    _faucetLocationController.text = provider.faucetLocation;
+    _additionalFaucetController.text = provider.additionalFaucet;
+  }
 
   @override
   void dispose() {
@@ -45,273 +49,367 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Application submitted successfully!')),
-      );
-      // TODO: Send data to backend
-    }
-  }
-
-  List<Widget> _formSteps(ColorScheme colors) => [
-    // Step 0
-    Column(
-      children: [
-        // Email
-        TextFormField(
-          controller: _emailController,
-          decoration: InputDecoration(
-            labelText: 'Email Address',
-            prefixIcon: Icon(Icons.email, color: colors.primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty || !value.contains('@')) {
-              return 'Please enter a valid email';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        // Name of Applicant
-        TextFormField(
-          controller: _applicantController,
-          decoration: InputDecoration(
-            labelText: 'Name of Applicant',
-            prefixIcon: Icon(Icons.person, color: colors.primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter applicant name';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        // Name of Spouse
-        TextFormField(
-          controller: _spouseController,
-          decoration: InputDecoration(
-            labelText: 'Name of Spouse',
-            prefixIcon: Icon(Icons.person_outline, color: colors.primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Present Address
-        TextFormField(
-          controller: _presentAddressController,
-          decoration: InputDecoration(
-            labelText: 'Present Address',
-            prefixIcon: Icon(Icons.home, color: colors.primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please enter present address';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        // Previous Address
-        TextFormField(
-          controller: _previousAddressController,
-          decoration: InputDecoration(
-            labelText: 'Previous Address',
-            prefixIcon: Icon(Icons.home_outlined, color: colors.primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Next Button
-        Align(
-          alignment: Alignment.centerRight,
-          child: ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                setState(() {
-                  _currentStep++;
-                });
-              }
-            },
-            child: const Text('Next'),
-          ),
-        ),
-      ],
-    ),
-
-    // Step 1
-    Column(
-      children: [
-        // Application Type
-        DropdownButtonFormField<String>(
-          value: _applicationType,
-          decoration: InputDecoration(
-            labelText: 'Water Application Type',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          items: [
-            'Residential',
-            'Commercial',
-            'Industrial',
-          ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-          onChanged: (value) {
-            setState(() {
-              _applicationType = value!;
-            });
-          },
-        ),
-        const SizedBox(height: 16),
-        // House Material
-        DropdownButtonFormField<String>(
-          value: _houseMaterial,
-          decoration: InputDecoration(
-            labelText: 'House/Establishment Material',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          items: [
-            'Wood',
-            'Concrete',
-            'Bamboo',
-            'Others',
-          ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-          onChanged: (value) {
-            setState(() {
-              _houseMaterial = value!;
-            });
-          },
-        ),
-        const SizedBox(height: 16),
-        // Ownership Status
-        DropdownButtonFormField<String>(
-          value: _ownershipStatus,
-          decoration: InputDecoration(
-            labelText: 'Ownership Status',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          items: [
-            'Owned',
-            'Rented',
-          ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-          onChanged: (value) {
-            setState(() {
-              _ownershipStatus = value!;
-            });
-          },
-        ),
-        const SizedBox(height: 16),
-        // Faucet Location
-        TextFormField(
-          controller: _faucetLocationController,
-          decoration: InputDecoration(
-            labelText: 'Faucet Location',
-            prefixIcon: Icon(Icons.water, color: colors.primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Additional Faucet
-        TextFormField(
-          controller: _additionalFaucetController,
-          decoration: InputDecoration(
-            labelText: 'Additional Faucet (Optional)',
-            prefixIcon: Icon(Icons.add, color: colors.primary),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Interior Plumbing
-        SwitchListTile(
-          title: const Text('Do you want interior plumbing installed?'),
-          value: _interiorPlumbing,
-          onChanged: (val) {
-            setState(() {
-              _interiorPlumbing = val;
-            });
-          },
-        ),
-        const SizedBox(height: 24),
-        // Back & Submit
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _currentStep--;
-                });
-              },
-              child: const Text('Back'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // ✅ Validate before submission
-                if (_formKey.currentState!.validate()) {
-                  _submitForm();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please fill in all required fields.'),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Submit Application'),
-            ),
-          ],
-        ),
-      ],
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Water Application Form'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
+    return ChangeNotifierProvider<WaterApplicationProvider>.value(
+      value: provider,
+      child: Consumer<WaterApplicationProvider>(
+        builder: (context, provider, _) {
+          List<Widget> formSteps() => [
+            // Step 0
+            Column(
               children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 100,
-                  width: 100,
-                  fit: BoxFit.contain,
+                TextFormField(
+                  controller: _emailController,
+                  onChanged: provider.setEmail,
+                  decoration: InputDecoration(
+                    labelText: 'Email Address',
+                    prefixIcon: Icon(Icons.email, color: colors.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        !value.contains('@')) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  'Application Form',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: colors.primary,
-                    fontWeight: FontWeight.bold,
+                TextFormField(
+                  controller: _applicantController,
+                  onChanged: provider.setApplicantName,
+                  decoration: InputDecoration(
+                    labelText: 'Name of Applicant',
+                    prefixIcon: Icon(Icons.person, color: colors.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter applicant name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _spouseController,
+                  onChanged: provider.setSpouseName,
+                  decoration: InputDecoration(
+                    labelText: 'Name of Spouse',
+                    prefixIcon: Icon(
+                      Icons.person_outline,
+                      color: colors.primary,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Fill out the form to request a new water service account.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _presentAddressController,
+                  onChanged: provider.setPresentAddress,
+                  decoration: InputDecoration(
+                    labelText: 'Present Address',
+                    prefixIcon: Icon(Icons.home, color: colors.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter present address';
+                    }
+                    return null;
+                  },
                 ),
-                const SizedBox(height: 24),
-                // Show current step
-                _formSteps(colors)[_currentStep],
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _previousAddressController,
+                  onChanged: provider.setPreviousAddress,
+                  decoration: InputDecoration(
+                    labelText: 'Previous Address',
+                    prefixIcon: Icon(
+                      Icons.home_outlined,
+                      color: colors.primary,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        provider.nextStep();
+                      }
+                    },
+                    child: const Text('Next'),
+                  ),
+                ),
               ],
             ),
-          ),
-        ),
+
+            // Step 1
+            Column(
+              children: [
+                DropdownButtonFormField<String>(
+                  value: provider.applicationType,
+                  onChanged: (val) {
+                    if (val != null) provider.setApplicationType(val);
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Water Application Type',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: ['Residential', 'Commercial', 'Industrial']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: provider.houseMaterial,
+                  onChanged: (val) {
+                    if (val != null) provider.setHouseMaterial(val);
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'House/Establishment Material',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: ['Wood', 'Concrete', 'Bamboo', 'Others']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: provider.ownershipStatus,
+                  onChanged: (val) {
+                    if (val != null) provider.setOwnershipStatus(val);
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Ownership Status',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: ['Owned', 'Rented']
+                      .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                      .toList(),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _faucetLocationController,
+                  onChanged: provider.setFaucetLocation,
+                  decoration: InputDecoration(
+                    labelText: 'Faucet Location',
+                    prefixIcon: Icon(Icons.water, color: colors.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please Enter Faucet Location';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _additionalFaucetController,
+                  onChanged: provider.setAdditionalFaucet,
+                  decoration: InputDecoration(
+                    labelText: 'Additional Faucet (Optional)',
+                    prefixIcon: Icon(Icons.add, color: colors.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SwitchListTile(
+                  title: const Text('Do you want interior plumbing installed?'),
+                  value: provider.interiorPlumbing,
+                  onChanged: provider.setInteriorPlumbing,
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ElevatedButton(
+                      onPressed: provider.previousStep,
+                      child: const Text('Back'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          provider.submitForm();
+
+                          showDialog(
+                            context: context,
+                            barrierDismissible:
+                                false, // Prevent closing by tapping outside
+                            builder: (context) => AlertDialog(
+                              title: const Text(
+                                'Next Steps',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              content: SingleChildScrollView(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: const [
+                                    Text(
+                                      'You’ve successfully completed the first step of your water application!',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Next, please visit Your Water District Department to continue your application.',
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'Requirements:',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    ListTile(
+                                      leading: Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.green,
+                                      ),
+                                      title: Text(
+                                        '1 Photocopy of TAX DECLARATION',
+                                      ),
+                                      dense: true,
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    ListTile(
+                                      leading: Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.green,
+                                      ),
+                                      title: Text(
+                                        '1 Photocopy of TAX RECEIPT for this year',
+                                      ),
+                                      dense: true,
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    ListTile(
+                                      leading: Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.green,
+                                      ),
+                                      title: Text(
+                                        '1 Photocopy of RESIDENCE CERTIFICATE',
+                                      ),
+                                      dense: true,
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    ListTile(
+                                      leading: Icon(
+                                        Icons.check_circle_outline,
+                                        color: Colors.green,
+                                      ),
+                                      title: Text(
+                                        'BRGY. CERTIFICATION FOR WATER CONNECTION',
+                                      ),
+                                      dense: true,
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(
+                                      context,
+                                    ).pop(); // Close the dialog
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) => const LoginPage(),
+                                      ),
+                                    ); // Navigate to LoginPage
+                                  },
+                                  child: const Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                      child: const Text('Submit'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ];
+
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Water Application Form'),
+              centerTitle: true,
+            ),
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        'assets/images/logo.png',
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Application Form',
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              color: colors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Fill out the form to request a new water service account.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      formSteps()[provider.currentStep],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -38,4 +38,19 @@ class ApiService {
       return null;
     }
   }
+
+  static Future<List<Map<String, dynamic>>> fetchAssignedAreas(
+    int readerId,
+  ) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/assigned-areas/$readerId'),
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data);
+    } else {
+      throw Exception('Failed to fetch assigned areas');
+    }
+  }
 }

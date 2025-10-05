@@ -34,15 +34,19 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      final role = await authProvider.login(accountNumber, password);
+      final role = await authProvider.login(
+        accountNumber: accountNumber,
+        password: password,
+      );
 
-      if (role == 'admin') {
+      if (role == 'reader') {
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const ReaderDashboardPage()),
           );
         }
-      } else if (role == 'user') {
+      } else if (role == 'customer') {
+        // ✅ Change 'user' → 'customer'
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const DashboardPage()),
@@ -170,7 +174,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 10),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ForgotPasswordPage(), // 👈 page 1

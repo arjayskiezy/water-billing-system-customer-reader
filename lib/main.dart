@@ -3,11 +3,15 @@ import 'package:provider/provider.dart';
 import 'features/authentication/presentation/providers/auth_provider.dart';
 import 'features/authentication/auth/auth_wrapper.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'features/authentication/presentation/providers/water_application_provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider()..loadUser(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()..loadUser()),
+        ChangeNotifierProvider(create: (_) => WaterApplicationProvider()),
+      ],
       child: const MyApp(),
     ),
   );
