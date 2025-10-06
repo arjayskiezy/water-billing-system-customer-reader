@@ -1,33 +1,38 @@
 import 'package:flutter/foundation.dart';
 
 class ReaderDashboardProvider extends ChangeNotifier {
-  // Mock data
+  // Initial mock data
   int _remaining = 5;
   int _completed = 10;
   int _assigned = 15;
-  double _completionRate = 0.7;
-  String _syncStatus = "All readings synced"; // or "2 readings ready to sync"
   bool _isOnline = true;
+  bool _isSynced = false; // false = unsynced, true = synced
 
   // Getters
   int get remaining => _remaining;
   int get completed => _completed;
   int get assigned => _assigned;
-  double get completionRate => _completionRate;
-  String get syncStatus => _syncStatus;
+  double get completionRate => _completed / _assigned;
   bool get isOnline => _isOnline;
+  String get syncStatus =>
+      _isSynced ? "All readings synced" : "Readings unsynced";
 
-  // Methods to simulate data updates
+  // Toggle between synced and unsynced states
   void refreshMockData() {
-    // You can later replace this with actual API or DB fetch
-    _remaining = 2;
-    _completed = 13;
-    _assigned = 15;
-    _completionRate = _completed / _assigned;
-    _syncStatus = "1 reading ready to sync";
+    _isSynced = !_isSynced;
+
+    if (_isSynced) {
+      _completed = _assigned;
+      _remaining = 0;
+    } else {
+      _completed = 13;
+      _remaining = _assigned - _completed;
+    }
+
     notifyListeners();
   }
 
+  // Update online status
   void setOnlineStatus(bool status) {
     _isOnline = status;
     notifyListeners();
