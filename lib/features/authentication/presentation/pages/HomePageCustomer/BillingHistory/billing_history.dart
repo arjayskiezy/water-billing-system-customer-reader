@@ -1,81 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/CustomerProviders/billing_history_page_provider.dart';
 
-class BillingHistoryPage extends StatefulWidget {
+class BillingHistoryPage extends StatelessWidget {
   const BillingHistoryPage({super.key});
-
-  @override
-  State<BillingHistoryPage> createState() => _BillingHistoryPageState();
-}
-
-class _BillingHistoryPageState extends State<BillingHistoryPage> {
-  // Dummy billing data
-  final List<Map<String, dynamic>> billingData = const [
-    {
-      'month': 'August 12, 2025',
-      'dueDate': 'September 18, 2025',
-      'amount': 2341.51,
-      'usage': 300.127,
-      'paid': false,
-      'breakdown': {
-        'Water Consumption': 1450.23,
-        'Maintenance Fee': 50.00,
-        'Taxes': 1.00,
-        'Unpaid Bill': 4410.13,
-      },
-    },
-    {
-      'month': 'July 12, 2025',
-      'dueDate': 'August 18, 2025',
-      'amount': 1150.32,
-      'usage': 311.732,
-      'paid': false,
-      'breakdown': {
-        'Water Consumption': 980.00,
-        'Maintenance Fee': 50.00,
-        'Taxes': 0.32,
-        'Unpaid Bill': 120.00,
-      },
-    },
-    {
-      'month': 'June 14, 2025',
-      'dueDate': 'July 25, 2025',
-      'amount': 11231.50,
-      'usage': 4121.217,
-      'paid': false,
-      'breakdown': {
-        'Water Consumption': 8900.00,
-        'Maintenance Fee': 80.00,
-        'Taxes': 21.50,
-        'Unpaid Bill': 2230.00,
-      },
-    },
-    {
-      'month': 'April 14, 2025',
-      'dueDate': 'May 31, 2025',
-      'amount': 1123.21,
-      'usage': 800.562,
-      'paid': true,
-      'breakdown': {
-        'Water Consumption': 900.00,
-        'Maintenance Fee': 50.00,
-        'Taxes': 23.21,
-        'Unpaid Bill': 150.00,
-      },
-    },
-  ];
-
-  String _filter = "All"; // Default filter
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Filter logic
-    final filteredData = billingData.where((item) {
-      if (_filter == "Paid") return item['paid'] == true;
-      if (_filter == "Unpaid") return item['paid'] == false;
-      return true;
-    }).toList();
+    // Access the provider inside build method
+    final provider = Provider.of<BillingHistoryProvider>(context);
+    final filteredData = provider.billingData;
 
     return Scaffold(
       appBar: AppBar(
@@ -88,16 +24,14 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
       backgroundColor: Colors.grey[100],
       body: Column(
         children: [
-          // Filter chips with consistent rounded shape
+          // Filter chips
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
             child: Theme(
               data: theme.copyWith(
                 chipTheme: theme.chipTheme.copyWith(
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(
-                      17,
-                    ), // 👈 Rounded radius
+                    borderRadius: BorderRadius.circular(17),
                   ),
                 ),
               ),
@@ -106,22 +40,22 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
                 children: [
                   ChoiceChip(
                     label: const Text("All"),
-                    selected: _filter == "All",
-                    onSelected: (_) => setState(() => _filter = "All"),
+                    selected: provider.filter == "All",
+                    onSelected: (_) => provider.setFilter("All"),
                     selectedColor: theme.colorScheme.primary.withOpacity(0.2),
                     showCheckmark: false,
                   ),
                   ChoiceChip(
                     label: const Text("Paid"),
-                    selected: _filter == "Paid",
-                    onSelected: (_) => setState(() => _filter = "Paid"),
-                    selectedColor: theme.colorScheme.primary.withOpacity(0.2),
+                    selected: provider.filter == "Paid",
+                    onSelected: (_) => provider.setFilter("Paid"),
+                    selectedColor: Colors.green[100],
                     showCheckmark: false,
                   ),
                   ChoiceChip(
                     label: const Text("Unpaid"),
-                    selected: _filter == "Unpaid",
-                    onSelected: (_) => setState(() => _filter = "Unpaid"),
+                    selected: provider.filter == "Unpaid",
+                    onSelected: (_) => provider.setFilter("Unpaid"),
                     selectedColor: Colors.red[100],
                     showCheckmark: false,
                   ),
@@ -137,7 +71,8 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
               itemCount: filteredData.length,
               itemBuilder: (context, index) {
                 final item = filteredData[index];
-                final breakdown = item['breakdown'] as Map<String, double>;
+                final breakdown = (item['breakdown'] as Map)
+                    .cast<String, double>();
 
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 8),
@@ -158,17 +93,17 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
                       iconColor: Colors.white,
                       collapsedIconColor: Colors.white,
                       backgroundColor: item['paid']
-                          ? Colors.blue[700]
-                          : Colors.red[400],
+                          ? Colors.green[700]
+                          : Colors.red[700],
                       collapsedBackgroundColor: item['paid']
-                          ? Colors.blue[900]
-                          : Colors.red[300],
+                          ? Colors.green[500]
+                          : Colors.red[500],
                       childrenPadding: const EdgeInsets.all(16),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            item['month'],
+                            provider.formatDate(item['month']),
                             style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -186,7 +121,7 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
                         ],
                       ),
                       subtitle: Text(
-                        'Due: ${item['dueDate']}',
+                        'Due: ${provider.formatDate(item['dueDate'])}',
                         style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 12,
@@ -276,6 +211,44 @@ class _BillingHistoryPageState extends State<BillingHistoryPage> {
                   ),
                 );
               },
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.all(16),
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  offset: Offset(0, -2),
+                ),
+              ],
+            ),
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Navigate back to LoginPage and remove all previous routes
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 5,
+                ),
+                child: const Text(
+                  'Back to Dashboard',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
+              ),
             ),
           ),
         ],

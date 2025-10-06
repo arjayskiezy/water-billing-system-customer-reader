@@ -1,4 +1,4 @@
-import '../../api/service.dart';
+import '../../../api/service.dart';
 import 'package:flutter/material.dart';
 
 Future<String> sendReading(Map<String, dynamic> data) async {

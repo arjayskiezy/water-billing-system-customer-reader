@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../LoginPage/login_page.dart';
-import '../../../providers/auth_provider.dart';
+import '../../../providers/AuthProvider/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../shared/customer_storage.dart';
+import '../../../shared/customer_storage.dart';
 
 enum UserRole { customer, reader }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
-import '../HomePage/home_page.dart';
+import '../../providers/AuthProvider/auth_provider.dart';
+import '../HomePageCustomer/customer_dashboard.dart';
 import './ForgotPassword/forgot_password.dart';
 import './ActivateAccount/activate_account.dart';
 import './ApplicationForm/application_form.dart';

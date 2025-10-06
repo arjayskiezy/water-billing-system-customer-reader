@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../presentation/providers/auth_provider.dart';
-import '../presentation/pages/HomePage/home_page.dart';
+import '../presentation/providers/AuthProvider/auth_provider.dart';
+import '../presentation/pages/HomePageCustomer/customer_dashboard.dart';
 import '../presentation/pages/LoginPage/login_page.dart';
 import '../presentation/pages/HomePageReader/reader_dashboard.dart';
 

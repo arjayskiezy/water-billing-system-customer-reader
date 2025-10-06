@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'features/authentication/presentation/providers/auth_provider.dart';
+import 'features/authentication/presentation/providers/AuthProvider/auth_provider.dart';
 import 'features/authentication/auth/auth_wrapper.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'features/authentication/presentation/providers/water_application_provider.dart';
-import 'features/authentication/presentation/providers/billing_provider.dart';
+import 'features/authentication/presentation/providers/AuthProvider/water_application_provider.dart';
+import 'features/authentication/presentation/providers/CustomerProviders/billing_history&usage_provider.dart';
+import 'features/authentication/presentation/providers/CustomerProviders/billing_history_page_provider.dart';
 
 void main() {
   runApp(
@@ -13,6 +14,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => AuthProvider()..loadUser()),
         ChangeNotifierProvider(create: (_) => WaterApplicationProvider()),
         ChangeNotifierProvider(create: (_) => BillingProvider()),
+        ChangeNotifierProvider(create: (_) => BillingHistoryProvider()),
       ],
       child: const MyApp(),
     ),

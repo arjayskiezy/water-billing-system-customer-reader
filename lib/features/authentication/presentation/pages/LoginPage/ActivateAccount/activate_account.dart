@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/activate_account_provider.dart';
+import '../../../providers/AuthProvider/activate_account_provider.dart';
 
 class ActivateAccountPage extends StatelessWidget {
   const ActivateAccountPage({super.key});

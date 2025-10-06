@@ -1,5 +1,8 @@
 import '../BillingHistory/billing_history.dart';
 import 'package:flutter/material.dart';
+import '../../LoginPage/login_page.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/CustomerProviders/billing_history_page_provider.dart';
 
 class BillBreakdownPage extends StatelessWidget {
   const BillBreakdownPage({super.key});
@@ -12,7 +15,7 @@ class BillBreakdownPage extends StatelessWidget {
       String value, {
       TextStyle? labelStyle,
       TextStyle? valueStyle,
-      VoidCallback? onTap, // 👈 allow tapping
+      VoidCallback? onTap,
     }) {
       return GestureDetector(
         onTap: onTap,
@@ -28,6 +31,11 @@ class BillBreakdownPage extends StatelessWidget {
         ),
       );
     }
+
+    final provider = Provider.of<BillingHistoryProvider>(
+      context,
+      listen: false,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -74,7 +82,7 @@ class BillBreakdownPage extends StatelessWidget {
                     valueStyle: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: Colors.blueAccent,
+                      color: Colors.blue,
                     ),
                   ),
                   const Divider(height: 36),
@@ -118,7 +126,7 @@ class BillBreakdownPage extends StatelessWidget {
                     valueStyle: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blueAccent,
+                      color: Colors.blue,
                     ),
                   ),
                   const Divider(height: 36),
@@ -135,6 +143,7 @@ class BillBreakdownPage extends StatelessWidget {
               ),
             ),
           ),
+          // --- Back to Login Button ---
           Container(
             padding: const EdgeInsets.all(16),
             width: double.infinity,
@@ -152,22 +161,24 @@ class BillBreakdownPage extends StatelessWidget {
                 ),
               ],
             ),
-            child: ElevatedButton(
-              onPressed: () {
-                // Handle payment action
-                print('Pay Now pressed');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Navigate back to LoginPage and remove all previous routes
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 5,
                 ),
-              ),
-              child: const Text(
-                'Pay Now',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                child: const Text(
+                  'Back to Dashboard',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                ),
               ),
             ),
           ),
