@@ -1,15 +1,15 @@
-import '../BillingHistory/billing_history.dart';
 import 'package:flutter/material.dart';
-import '../../LoginPage/login_page.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/CustomerProviders/billing_history_page_provider.dart';
+import '../../../providers/CustomerProviders/billing_usage_page_provider.dart';
+import '../BillingHistory/billing_history.dart';
 
 class BillBreakdownPage extends StatelessWidget {
   const BillBreakdownPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Helper for a billing row
+    final provider = Provider.of<BillBreakdownProvider>(context);
+
     Widget billingRow(
       String label,
       String value, {
@@ -31,11 +31,6 @@ class BillBreakdownPage extends StatelessWidget {
         ),
       );
     }
-
-    final provider = Provider.of<BillingHistoryProvider>(
-      context,
-      listen: false,
-    );
 
     return Scaffold(
       appBar: AppBar(
@@ -73,12 +68,18 @@ class BillBreakdownPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  billingRow('Previous Reading', '1200.123 m³'),
-                  billingRow('Current Reading', '1220.121 m³'),
+                  billingRow(
+                    'Previous Reading',
+                    '${provider.previousReading} m³',
+                  ),
+                  billingRow(
+                    'Current Reading',
+                    '${provider.currentReading} m³',
+                  ),
                   const Divider(height: 36),
                   billingRow(
                     'Total Usage',
-                    '452.324 m³',
+                    provider.totalUsage,
                     valueStyle: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -96,12 +97,18 @@ class BillBreakdownPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  billingRow('Water Consumption', '₱1450.23'),
-                  billingRow('Maintenance Fee', '₱50.00'),
-                  billingRow('Taxes', '₱1.00'),
+                  billingRow(
+                    'Water Consumption',
+                    '₱${provider.waterConsumption.toStringAsFixed(2)}',
+                  ),
+                  billingRow(
+                    'Maintenance Fee',
+                    '₱${provider.maintenanceFee.toStringAsFixed(2)}',
+                  ),
+                  billingRow('Taxes', '₱${provider.taxes.toStringAsFixed(2)}'),
                   billingRow(
                     'Unpaid Bill',
-                    '₱4410.13',
+                    '₱${provider.unpaidBill.toStringAsFixed(2)}',
                     valueStyle: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -118,7 +125,7 @@ class BillBreakdownPage extends StatelessWidget {
                   const Divider(height: 36),
                   billingRow(
                     'Total Payment',
-                    '₱3124.41',
+                    '₱${provider.totalPayment.toStringAsFixed(2)}',
                     labelStyle: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
@@ -138,12 +145,11 @@ class BillBreakdownPage extends StatelessWidget {
                       style: TextStyle(fontSize: 13, color: Colors.black54),
                     ),
                   ),
-                  const SizedBox(height: 80), // space for bottom button
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
           ),
-          // --- Back to Login Button ---
           Container(
             padding: const EdgeInsets.all(16),
             width: double.infinity,
@@ -165,10 +171,7 @@ class BillBreakdownPage extends StatelessWidget {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: () {
-                  // Navigate back to LoginPage and remove all previous routes
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context),
                 style: ElevatedButton.styleFrom(
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
