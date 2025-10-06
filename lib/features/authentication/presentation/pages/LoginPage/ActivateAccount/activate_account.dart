@@ -1,78 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/activate_account_provider.dart';
 
-class ActivateAccountPage extends StatefulWidget {
+class ActivateAccountPage extends StatelessWidget {
   const ActivateAccountPage({super.key});
-
-  @override
-  State<ActivateAccountPage> createState() => _ActivateAccountPageState();
-}
-
-class _ActivateAccountPageState extends State<ActivateAccountPage> {
-  final TextEditingController _accountController = TextEditingController();
-  final TextEditingController _meterController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  bool _activationSent = false;
-  bool _isLoading = false;
-
-  @override
-  void dispose() {
-    _accountController.dispose();
-    _meterController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _requestActivation() {
-    String accountNumber = _accountController.text.trim();
-    String meterNumber = _meterController.text.trim();
-    String password = _passwordController.text.trim();
-
-    if (accountNumber.isEmpty || meterNumber.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    // Simulate activation API call
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-        _activationSent = true;
-      });
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Container(
-              constraints: const BoxConstraints(maxWidth: 440),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 6,
-                    offset: Offset(0, 3),
+    return ChangeNotifierProvider(
+      create: (_) => ActivateAccountProvider(),
+      child: Consumer<ActivateAccountProvider>(
+        builder: (context, provider, _) => Scaffold(
+          backgroundColor: Colors.grey[100],
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
                   ),
-                ],
+                  child: provider.activationSent
+                      ? _buildActivationSent(context, colors, provider)
+                      : _buildForm(context, colors, provider),
+                ),
               ),
-              child: _activationSent
-                  ? _buildActivationSent(colors)
-                  : _buildForm(colors),
             ),
           ),
         ),
@@ -80,7 +44,11 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
     );
   }
 
-  Widget _buildForm(ColorScheme colors) {
+  Widget _buildForm(
+    BuildContext context,
+    ColorScheme colors,
+    ActivateAccountProvider provider,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -93,6 +61,7 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
         const SizedBox(height: 24),
         Text(
           "Activate Your Account",
+          textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: colors.primary,
@@ -109,7 +78,7 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
         const SizedBox(height: 32),
         // Account Number
         TextField(
-          controller: _accountController,
+          controller: provider.accountController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             labelText: 'Account Number',
@@ -124,7 +93,7 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
         const SizedBox(height: 16),
         // Meter Number
         TextField(
-          controller: _meterController,
+          controller: provider.meterController,
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             labelText: 'Meter Number',
@@ -137,13 +106,14 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
           ),
         ),
         const SizedBox(height: 16),
-        // Password
+        // Email
         TextField(
-          controller: _passwordController,
-          obscureText: true,
+          controller: provider
+              .passwordController, // rename to emailController if you want
+          keyboardType: TextInputType.emailAddress,
           decoration: InputDecoration(
-            labelText: 'Password',
-            prefixIcon: Icon(Icons.lock, color: colors.primary),
+            labelText: 'Email',
+            prefixIcon: Icon(Icons.email, color: colors.primary),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -156,7 +126,9 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: _isLoading ? null : _requestActivation,
+            onPressed: provider.isLoading
+                ? null
+                : () => provider.requestActivation(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.primary,
               foregroundColor: Colors.white,
@@ -165,38 +137,52 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
               ),
               elevation: 5,
             ),
-            child: _isLoading
+            child: provider.isLoading
                 ? const CircularProgressIndicator(color: Colors.white)
                 : const Text(
-                    "Request Activation",
+                    "Send Request",
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
           ),
         ),
         const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Back to Login',
-            style: Theme.of(context).textTheme.labelSmall,
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () {
+              provider.reset();
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 5,
+            ),
+            child: const Text(
+              'Back to Login',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildActivationSent(ColorScheme colors) {
+  Widget _buildActivationSent(
+    BuildContext context,
+    ColorScheme colors,
+    ActivateAccountProvider provider,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset(
-          'assets/images/undraw_Mail_sent_re_0ofv.png',
-          width: 180,
-          height: 180,
-        ),
+        Icon(Icons.email_outlined, size: 80, color: colors.primary),
         const SizedBox(height: 24),
         Text(
           "Activation Request Sent!",
+          textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: colors.primary,
@@ -204,29 +190,39 @@ class _ActivateAccountPageState extends State<ActivateAccountPage> {
         ),
         const SizedBox(height: 16),
         Text(
-          "We've sent your activation request. You can now go back to login.",
+          "We've sent your activation request.",
           textAlign: TextAlign.center,
           style: Theme.of(
             context,
-          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+          ).textTheme.headlineSmall?.copyWith(color: Colors.grey[600]),
+        ),
+        const SizedBox(height: 12),
+        // New instruction about bringing ID to retrieve account password
+        Text(
+          "To get your Password, please bring a valid photo ID to the Municipal Water Department so they can verify your identity.",
+          textAlign: TextAlign.center,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
         ),
         const SizedBox(height: 24),
         SizedBox(
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              provider.reset();
+              Navigator.pop(context);
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: colors.primary,
-              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 5,
             ),
-            child: Text(
-              "Back to Login",
-              style: Theme.of(context).textTheme.labelSmall,
+            child: const Text(
+              'Back to Login',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ),
         ),

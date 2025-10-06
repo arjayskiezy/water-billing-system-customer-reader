@@ -1,38 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/forgot_password_provider.dart';
 
-class ForgotPasswordPage extends StatefulWidget {
+class ForgotPasswordPage extends StatelessWidget {
   const ForgotPasswordPage({super.key});
 
   @override
-  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => ForgotPasswordProvider(),
+      child: const _ForgotPasswordPageBody(),
+    );
+  }
 }
 
-class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
-  bool _mailSent = false;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  void _sendLink() {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _mailSent = true);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid email to continue.'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
-  }
+class _ForgotPasswordPageBody extends StatelessWidget {
+  const _ForgotPasswordPageBody({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<ForgotPasswordProvider>();
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -57,7 +44,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     ),
                   ],
                 ),
-                child: _mailSent ? _buildMailSent(colors) : _buildForm(colors),
+                child: provider.mailSent
+                    ? _buildMailSent(context, colors, provider)
+                    : _buildForm(context, colors, provider),
               ),
             ),
           ),
@@ -66,19 +55,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 
-  Widget _buildForm(ColorScheme colors) {
+  Widget _buildForm(
+    BuildContext context,
+    ColorScheme colors,
+    ForgotPasswordProvider provider,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset(
-          'assets/images/logo.png',
-          width: 120,
-          height: 120,
-          fit: BoxFit.contain,
-        ),
+        Image.asset('assets/images/logo.png', width: 120, height: 120),
         const SizedBox(height: 24),
         Text(
           'Forgot Password?',
+          textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: colors.primary,
@@ -93,88 +82,81 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
         ),
         const SizedBox(height: 32),
-        Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Email',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[800],
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                  hintText: 'Enter your email',
-                  prefixIcon: Icon(Icons.email, color: colors.primary),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: colors.primary),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty || !value.contains('@')) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _sendLink,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 5,
-                  ),
-                  child: const Text(
-                    'Send Link',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-            ],
+        TextFormField(
+          controller: provider.emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: InputDecoration(
+            hintText: 'Enter your email',
+            prefixIcon: Icon(Icons.email, color: colors.primary),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: colors.primary),
+            ),
           ),
         ),
+        const SizedBox(height: 24),
+        // Send Link button (already full width)
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () => provider.sendResetLink(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 5,
+            ),
+            child: const Text(
+              'Send Link',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+
         const SizedBox(height: 16),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Back to Login',
-            style: Theme.of(context).textTheme.labelSmall,
+
+        // Back to Login button (make full width)
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: () {
+              provider.reset();
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 5,
+            ),
+            child: const Text(
+              'Back to Login',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildMailSent(ColorScheme colors) {
+  Widget _buildMailSent(
+    BuildContext context,
+    ColorScheme colors,
+    ForgotPasswordProvider provider,
+  ) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset(
-          'assets/images/undraw_Mail_sent_re_0ofv.png',
-          width: 180,
-          height: 180,
-        ),
+        Icon(Icons.email_outlined, size: 120, color: colors.primary),
         const SizedBox(height: 24),
         Text(
           'Password reset link sent!',
@@ -196,18 +178,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              provider.reset();
+              Navigator.pop(context);
+            },
             style: ElevatedButton.styleFrom(
-              backgroundColor: colors.primary,
-              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               elevation: 5,
             ),
-            child: Text(
+            child: const Text(
               'Back to Login',
-              style: Theme.of(context).textTheme.labelSmall,
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ),
         ),

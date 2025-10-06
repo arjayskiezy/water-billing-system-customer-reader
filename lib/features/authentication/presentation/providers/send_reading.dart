@@ -1,18 +1,24 @@
 import '../../api/service.dart';
+import 'package:flutter/material.dart';
 
 Future<String> sendReading(Map<String, dynamic> data) async {
   try {
-    // Dummy local simulation (you can log it)
-    print('📤 Sending reading: $data');
+    // Debug print the data being sent
+    debugPrint('📤 Sending reading: $data');
 
-    // TODO: Replace this with backend call later
+    // TODO: Replace this with actual backend call later
     // final response = await ApiService.sendReading(data);
+    // debugPrint('📥 Response: $response');
     // if (response['status'] == 'success') return 'success';
 
     await Future.delayed(const Duration(seconds: 1)); // simulate delay
+
+    debugPrint('✅ Reading sent successfully'); // debug print success
     return 'success';
-  } catch (e) {
-    print('❌ Error sending reading: $e');
+  } catch (e, stackTrace) {
+    // Log the error and stack trace
+    debugPrint('❌ Error sending reading: $e');
+    debugPrint('Stack trace: $stackTrace');
     return 'error';
   }
 }
