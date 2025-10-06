@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/AuthProvider/auth_provider.dart';
+import '../../providers/ReaderProviders/progress_provider.dart';
 import './AssignedArea/assigned_area.dart';
 import './SettingsProfile/settings_profile.dart';
 
@@ -8,232 +11,217 @@ class ReaderDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final dashboardProvider = Provider.of<ReaderDashboardProvider>(context);
 
-    // Static sample values
+    // Mocked time/date for now
     const time = "08:30 PM";
     const day = "Tuesday";
     const date = "09/23/25";
+
+    final String fullName =
+        "${authProvider.firstName ?? ''} ${authProvider.lastName ?? ''}".trim();
+    final String uid = authProvider.uid ?? "Unknown UID";
 
     return Scaffold(
       appBar: AppBar(
         elevation: 2,
         title: Row(
           children: [
-            Container(
-              height: 40,
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-            ),
             const SizedBox(width: 5),
             Text("gripometer", style: theme.textTheme.displayLarge),
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Greeting Card
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    // Top row: Profile + Greeting + Time
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  image: AssetImage("assets/images/reader.jpg"),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Justin Nabunturan",
-                                  style: theme.textTheme.headlineSmall
-                                      ?.copyWith(fontSize: 12),
-                                ),
-                                Text(
-                                  'UID: 123456',
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontSize: 12,
+      body: authProvider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Greeting card
+                  Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          // Profile + greeting
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 28,
+                                    backgroundColor: theme.primaryColor,
+                                    child: Text(
+                                      '${(authProvider.firstName ?? '').isNotEmpty ? authProvider.firstName![0].toUpperCase() : ''}'
+                                      '${(authProvider.lastName ?? '').isNotEmpty ? authProvider.lastName![0].toUpperCase() : ''}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                      ),
+                                    ),
                                   ),
+                                  const SizedBox(width: 5),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        fullName.isNotEmpty
+                                            ? fullName
+                                            : "Reader User",
+                                        style: theme.textTheme.headlineSmall
+                                            ?.copyWith(fontSize: 12),
+                                      ),
+                                      Text(
+                                        'UID: $uid',
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    time,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    date,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    day,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Online & Sync status
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.wifi,
+                                      color: dashboardProvider.isOnline
+                                          ? Colors.green
+                                          : Colors.red,
+                                      size: 22,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      dashboardProvider.isOnline
+                                          ? "Online"
+                                          : "Offline",
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.sync,
+                                      color: Colors.blue,
+                                      size: 22,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(dashboardProvider.syncStatus),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              time,
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "$date",
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 12,
-                              ),
-                              textAlign: TextAlign.left,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "$day",
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              textAlign: TextAlign.end,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Status Container
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 8,
-                        horizontal: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Row(
-                            children: [
-                              Icon(Icons.wifi, color: Colors.green, size: 22),
-                              SizedBox(width: 6),
-                              Text("Online"),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Icon(Icons.sync, color: Colors.blue, size: 22),
-                              SizedBox(width: 6),
-                              Text("Sync Status"),
-                            ],
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Stat cards (dynamic)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildStatCard(
+                        "Remaining",
+                        dashboardProvider.remaining.toString(),
+                        theme,
+                      ),
+                      _buildStatCard(
+                        "Completed",
+                        dashboardProvider.completed.toString(),
+                        theme,
+                      ),
+                      _buildStatCard(
+                        "Assigned",
+                        dashboardProvider.assigned.toString(),
+                        theme,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Progress (dynamic)
+                  _buildProgressCard(theme, dashboardProvider.completionRate),
+
+                  const SizedBox(height: 16),
+
+                  // Action cards (unchanged)
+                  _buildActionCard(
+                    context,
+                    theme,
+                    icon: Icons.work_outline,
+                    title: "Field Operations",
+                    description: "Manage your daily field activities",
+                    actions: ["View Assignments"],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActionCard(
+                    context,
+                    theme,
+                    icon: Icons.settings_outlined,
+                    title: "Settings & Profile",
+                    description: "Manage account preferences settings",
+                    actions: ["Account Preferences"],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-
-            // Three static stat cards
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildStatCard("Remaining", "5", theme),
-                _buildStatCard("Completed", "10", theme),
-                _buildStatCard("Assigned", "15", theme),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Today's Progress Card
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.show_chart,
-                          color: theme.primaryColor,
-                          size: 26,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "Today's Progress",
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.primaryColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text("Completion Rate", style: theme.textTheme.bodyMedium),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: LinearProgressIndicator(
-                            value: 0.7,
-                            minHeight: 8,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text("70%"),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [Text("8 of 7 readings completed")],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Action Cards
-            _buildActionCard(
-              context,
-              theme,
-              icon: Icons.work_outline,
-              title: "Field Operations",
-              description: "Manage your daily field activities",
-              actions: ["View Assignments"],
-            ),
-            const SizedBox(height: 16),
-            _buildActionCard(
-              context,
-              theme,
-              icon: Icons.settings_outlined,
-              title: "Settings & Profile",
-              description: "Manage account preferences settings",
-              actions: ["Account Preferences"],
-            ),
-          ],
-        ),
-      ),
 
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(16),
@@ -257,14 +245,16 @@ class ReaderDashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "2 readings ready to sync",
+                    dashboardProvider.syncStatus,
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                dashboardProvider.refreshMockData();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primaryColor,
                 foregroundColor: Colors.white,
@@ -283,7 +273,7 @@ class ReaderDashboardPage extends StatelessWidget {
   Widget _buildStatCard(String title, String count, ThemeData theme) {
     return Expanded(
       child: SizedBox(
-        height: 100, // <-- set a fixed height for all cards
+        height: 100,
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 4),
           padding: const EdgeInsets.all(16),
@@ -292,8 +282,7 @@ class ReaderDashboardPage extends StatelessWidget {
             color: Colors.grey.shade200,
           ),
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center, // center content vertically
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 count,
@@ -314,7 +303,53 @@ class ReaderDashboardPage extends StatelessWidget {
     );
   }
 
-  // Action card with navigation
+  Widget _buildProgressCard(ThemeData theme, double progress) {
+    final percent = (progress * 100).toStringAsFixed(0);
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.show_chart, color: theme.primaryColor, size: 26),
+                const SizedBox(width: 8),
+                Text(
+                  "Today's Progress",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text("Completion Rate", style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text("$percent%"),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text("Completed ${(progress * 15).round()} of 15 readings"),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildActionCard(
     BuildContext context,
     ThemeData theme, {

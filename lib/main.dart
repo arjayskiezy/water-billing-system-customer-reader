@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'features/authentication/presentation/providers/AuthProvider/auth_provider.dart';
 import 'features/authentication/auth/auth_wrapper.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'features/authentication/presentation/providers/AuthProvider/auth_provider.dart';
 import 'features/authentication/presentation/providers/AuthProvider/water_application_provider.dart';
 import 'features/authentication/presentation/providers/CustomerProviders/billing_history&usage_provider.dart';
 import 'features/authentication/presentation/providers/CustomerProviders/billing_history_page_provider.dart';
 import 'features/authentication/presentation/providers/CustomerProviders/billing_usage_page_provider.dart';
 import 'features/authentication/presentation/providers/CustomerProviders/announcement_provider.dart';
+import 'features/authentication/presentation/providers/ReaderProviders/progress_provider.dart';
+import 'features/authentication/presentation/providers/ReaderProviders/assigned_area_provider.dart';
+import 'features/authentication/presentation/providers/ReaderProviders/water_reading_provider.dart';
+import 'features/authentication/presentation/providers/ReaderProviders/storage_provider.dart';
 
 void main() {
   runApp(
@@ -19,6 +24,11 @@ void main() {
         ChangeNotifierProvider(create: (_) => BillingHistoryProvider()),
         ChangeNotifierProvider(create: (_) => BillBreakdownProvider()),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
+        ChangeNotifierProvider(create: (_) => ReaderDashboardProvider()),
+        ChangeNotifierProvider(create: (_) => AssignedAreaProvider()),
+        ChangeNotifierProvider(create: (_) => AssignedAreaProvider()),
+        ChangeNotifierProvider(create: (_) => WaterReadingProvider()),
+        ChangeNotifierProvider(create: (_) => StorageProvider()),
       ],
       child: const MyApp(),
     ),

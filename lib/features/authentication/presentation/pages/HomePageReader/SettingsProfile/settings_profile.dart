@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../LoginPage/login_page.dart';
 import '../../../providers/AuthProvider/auth_provider.dart';
 import 'package:provider/provider.dart';
+import '../../../providers/ReaderProviders/storage_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -22,6 +23,13 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final storageProvider = Provider.of<StorageProvider>(context);
+
+    final String fullName =
+        "${authProvider.firstName ?? ''} ${authProvider.lastName ?? ''}".trim();
+    final String uid = authProvider.uid ?? "Unknown UID";
 
     return Scaffold(
       appBar: AppBar(
@@ -34,7 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // User Info Card
+            // User Info Card (updated)
             Card(
               elevation: 5,
               shape: RoundedRectangleBorder(
@@ -46,27 +54,35 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 20,
-                      backgroundImage: AssetImage('assets/images/reader.jpg'),
+                      radius: 28,
+                      backgroundColor: theme.primaryColor,
+                      child: Text(
+                        '${(authProvider.firstName ?? '').isNotEmpty ? authProvider.firstName![0].toUpperCase() : ''}'
+                        '${(authProvider.lastName ?? '').isNotEmpty ? authProvider.lastName![0].toUpperCase() : ''}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 5),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Justine Nabunturan',
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
+                            fullName.isNotEmpty ? fullName : "Reader User",
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                           Text(
-                            'UID: 123456',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.titleSmall?.copyWith(fontSize: 10),
+                            'UID: $uid',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontSize: 12,
+                            ),
                           ),
                         ],
                       ),
@@ -96,9 +112,9 @@ class _SettingsPageState extends State<SettingsPage> {
             // App Settings
             Text(
               'App Settings',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             Container(
@@ -156,21 +172,21 @@ class _SettingsPageState extends State<SettingsPage> {
             // Data & Storage
             Text(
               'Data & Storage',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
             _buildInfoRow(
               'Storage Used',
-              '${storageUsed.toStringAsFixed(1)} MB',
+              '${storageProvider.storageUsed.toStringAsFixed(1)} MB',
             ),
             const SizedBox(height: 6),
-            _buildInfoRow('Last Sync', '2 minutes ago'),
+            _buildInfoRow('Last Sync', storageProvider.lastSyncFormatted),
             const SizedBox(height: 6),
             _buildInfoRow(
               'Offline Readings',
-              '$offlineReadings',
+              '${storageProvider.offlineReadings}',
               badgeColor: Colors.yellow.shade100,
               textColor: Colors.black87,
             ),
@@ -185,12 +201,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 content: 'Do you want to force sync all data now?',
                 onConfirm: () {
                   Navigator.pop(context);
-                  // Add sync logic here
+                  storageProvider.markSynced(); // ✅ update last sync time
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Data synced successfully!')),
                   );
                 },
               ),
+
               icon: const Icon(Icons.sync),
               label: const Text('Force Sync All Data'),
               style: ElevatedButton.styleFrom(
@@ -211,12 +228,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 content: 'Are you sure you want to clear all local data?',
                 onConfirm: () {
                   Navigator.pop(context);
-                  // Add clear local data logic here
+                  storageProvider.clearLocalData(); // ✅ reset values
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Local data cleared!')),
                   );
                 },
               ),
+
               icon: const Icon(Icons.delete_forever, color: Colors.red),
               label: const Text(
                 'Clear Local Data',
@@ -237,12 +255,11 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: 'Logout',
                 content: 'Are you sure you want to logout?',
                 onConfirm: () {
-                  // Perform logout logic
                   Provider.of<AuthProvider>(context, listen: false).logout();
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (route) => false, // removes all previous routes
+                    (route) => false,
                   );
                 },
               ),
@@ -286,9 +303,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           TextButton(
             onPressed: onConfirm,
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.red, // only affects text/icon color
-            ),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Confirm'),
           ),
         ],

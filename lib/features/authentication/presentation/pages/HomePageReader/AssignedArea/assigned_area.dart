@@ -1,40 +1,16 @@
 import 'package:flutter/material.dart';
-import '../InputReadings/input_readings.dart'; // Make sure this imports the updated WaterReadingPage
+import 'package:provider/provider.dart';
+import '../InputReadings/input_readings.dart';
+import '../../../providers/ReaderProviders/assigned_area_provider.dart';
 
-class AssignedAreaPage extends StatefulWidget {
+class AssignedAreaPage extends StatelessWidget {
   const AssignedAreaPage({super.key});
-
-  @override
-  State<AssignedAreaPage> createState() => _AssignedAreaPageState();
-}
-
-class _AssignedAreaPageState extends State<AssignedAreaPage> {
-  String selectedFilter = 'All';
-  String searchQuery = '';
-
-  final List<Map<String, String>> assignedAreas = [
-    {'name': 'Domeng Martin', 'status': 'Completed'},
-    {'name': 'Alden Richard', 'status': 'Pending'},
-    {'name': 'Maine Mendoza', 'status': 'Pending'},
-    {'name': 'Richard Mille', 'status': 'Pending'},
-    {'name': 'Joshua Discaya', 'status': 'Pending'},
-    {'name': 'Kalibangon Co', 'status': 'Pending'},
-    {'name': 'Jinggoy Estrada', 'status': 'Pending'},
-  ];
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-
-    // Filtered and searched list
-    final filteredList = assignedAreas.where((area) {
-      final matchesStatus =
-          selectedFilter == 'All' || area['status'] == selectedFilter;
-      final matchesSearch = area['name']!.toLowerCase().contains(
-        searchQuery.toLowerCase(),
-      );
-      return matchesStatus && matchesSearch;
-    }).toList();
+    final provider = Provider.of<AssignedAreaProvider>(context);
+    final filteredList = provider.filteredAreas;
 
     return Scaffold(
       appBar: AppBar(
@@ -53,7 +29,7 @@ class _AssignedAreaPageState extends State<AssignedAreaPage> {
             children: [
               // Search Bar
               TextField(
-                onChanged: (value) => setState(() => searchQuery = value),
+                onChanged: provider.setSearchQuery,
                 decoration: InputDecoration(
                   hintText: 'Search by name...',
                   prefixIcon: Icon(Icons.search, color: colors.primary),
@@ -77,9 +53,9 @@ class _AssignedAreaPageState extends State<AssignedAreaPage> {
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _buildFilterButton('All', colors),
-                    _buildFilterButton('Pending', colors),
-                    _buildFilterButton('Completed', colors),
+                    _buildFilterButton(context, 'All'),
+                    _buildFilterButton(context, 'Pending'),
+                    _buildFilterButton(context, 'Completed'),
                   ],
                 ),
               ),
@@ -104,7 +80,12 @@ class _AssignedAreaPageState extends State<AssignedAreaPage> {
                         itemBuilder: (context, index) {
                           final area = filteredList[index];
                           final isCompleted = area['status'] == 'Completed';
-                          return _buildAreaCard(area, isCompleted, colors);
+                          return _buildAreaCard(
+                            context,
+                            area,
+                            isCompleted,
+                            colors,
+                          );
                         },
                       ),
               ),
@@ -115,9 +96,11 @@ class _AssignedAreaPageState extends State<AssignedAreaPage> {
     );
   }
 
-  // Filter Button
-  Widget _buildFilterButton(String label, ColorScheme colors) {
-    final bool selected = selectedFilter == label;
+  // Filter Button Widget
+  Widget _buildFilterButton(BuildContext context, String label) {
+    final colors = Theme.of(context).colorScheme;
+    final provider = Provider.of<AssignedAreaProvider>(context);
+    final selected = provider.selectedFilter == label;
 
     return Padding(
       padding: const EdgeInsets.only(right: 4),
@@ -147,7 +130,7 @@ class _AssignedAreaPageState extends State<AssignedAreaPage> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () => setState(() => selectedFilter = label),
+          onTap: () => provider.setFilter(label),
           child: Center(
             child: Text(
               label,
@@ -163,8 +146,9 @@ class _AssignedAreaPageState extends State<AssignedAreaPage> {
     );
   }
 
-  // Area Card
+  // Area Card Widget
   Widget _buildAreaCard(
+    BuildContext context,
     Map<String, String> area,
     bool isCompleted,
     ColorScheme colors,

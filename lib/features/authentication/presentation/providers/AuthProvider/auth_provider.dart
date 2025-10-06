@@ -85,7 +85,7 @@ class AuthProvider extends ChangeNotifier {
         password == dummyReaderPassword) {
       _role = UserRole.reader;
       _loggedIn = true;
-      _firstName = "Justin";
+      _firstName = "Justins";
       _lastName = "Nabunturan";
       _uid = "123456";
 

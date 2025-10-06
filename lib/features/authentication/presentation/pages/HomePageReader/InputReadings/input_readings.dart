@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:provider/provider.dart';
+import '../../../providers/ReaderProviders/water_reading_provider.dart';
 
 class WaterReadingPage extends StatefulWidget {
   final String areaName;
@@ -17,58 +17,18 @@ class WaterReadingPage extends StatefulWidget {
 }
 
 class _WaterReadingPageState extends State<WaterReadingPage> {
-  late TextEditingController _readingController;
-  final TextEditingController _notesController = TextEditingController();
-  File? _meterPhoto;
-  bool _isSaving = false;
-
   @override
   void initState() {
     super.initState();
-    _readingController = TextEditingController(
-      text: widget.isEditing ? '1,234' : '',
-    );
-  }
-
-  Future<void> _pickPhoto() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 70,
-    );
-    if (pickedFile != null) {
-      setState(() {
-        _meterPhoto = File(pickedFile.path);
-      });
-    }
-  }
-
-  void _saveReading({bool offline = false}) {
-    if (_readingController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter the meter reading.')),
-      );
-      return;
-    }
-
-    setState(() => _isSaving = true);
-
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            offline
-                ? 'Meter reading saved offline successfully!'
-                : 'Meter reading saved & synced successfully!',
-          ),
-        ),
-      );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<WaterReadingProvider>();
+      provider.initializeReading(widget.isEditing ? '1,234' : '');
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<WaterReadingProvider>();
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -87,7 +47,7 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Area Info Card
+            // Area Card
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -138,7 +98,7 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
 
             // Current Reading
             TextField(
-              controller: _readingController,
+              controller: provider.readingController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Current Reading',
@@ -164,15 +124,18 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
               ),
               elevation: 3,
               child: InkWell(
-                onTap: _pickPhoto,
+                onTap: provider.pickPhoto,
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   height: 180,
                   alignment: Alignment.center,
-                  child: _meterPhoto != null
+                  child: provider.meterPhoto != null
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Image.file(_meterPhoto!, fit: BoxFit.cover),
+                          child: Image.file(
+                            provider.meterPhoto!,
+                            fit: BoxFit.cover,
+                          ),
                         )
                       : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -197,7 +160,7 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
 
             // Notes
             TextField(
-              controller: _notesController,
+              controller: provider.notesController,
               maxLines: 3,
               decoration: InputDecoration(
                 labelText: 'Notes',
@@ -217,23 +180,25 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
 
             // Save & Sync Button
             ElevatedButton(
-              onPressed: _isSaving ? null : () => _saveReading(offline: false),
+              onPressed: provider.isSaving
+                  ? null
+                  : () => provider.saveReading(context, offline: false),
               style: ElevatedButton.styleFrom(
-                backgroundColor: colors.primary, // Blue background
+                backgroundColor: colors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 elevation: 5,
               ),
-              child: _isSaving
+              child: provider.isSaving
                   ? const CircularProgressIndicator(color: Colors.white)
                   : const Text(
                       'Save & Sync',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white, // White text
+                        color: Colors.white,
                       ),
                     ),
             ),
@@ -241,24 +206,26 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
 
             // Save Offline Button
             ElevatedButton(
-              onPressed: _isSaving ? null : () => _saveReading(offline: true),
+              onPressed: provider.isSaving
+                  ? null
+                  : () => provider.saveReading(context, offline: true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // White background
+                backgroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: colors.primary), // Blue border
+                  side: BorderSide(color: colors.primary),
                 ),
                 elevation: 2,
               ),
-              child: _isSaving
+              child: provider.isSaving
                   ? CircularProgressIndicator(color: colors.primary)
                   : Text(
                       'Save Offline',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: colors.primary, // Blue text
+                        color: colors.primary,
                       ),
                     ),
             ),
@@ -266,12 +233,5 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _readingController.dispose();
-    _notesController.dispose();
-    super.dispose();
   }
 }
