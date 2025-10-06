@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/billing_provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import './BillingHistory/billing_history.dart';
 import './Usage/usage.dart';
@@ -16,7 +17,12 @@ class DashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final authProvider = Provider.of<AuthProvider>(context);
+    final billingProvider = Provider.of<BillingProvider>(context);
 
+    // Only fetch if not already fetched
+    if (billingProvider.currentAmountDue == 0) {
+      billingProvider.fetchBillingInfo(authProvider.accountNumber.toString());
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -163,30 +169,21 @@ class DashboardPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- Title Row ---
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Current Amount Due',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      'Current Amount Due',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    // --- Amount with Icon ---
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          '₱2840.50 PHP',
+                          '₱${billingProvider.currentAmountDue.toStringAsFixed(2)}',
                           style: TextStyle(
-                            fontSize: 28,
+                            fontSize: 40,
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -194,15 +191,16 @@ class DashboardPage extends StatelessWidget {
                         const SizedBox(width: 5),
                         Icon(
                           LucideIcons.coins,
-                          size: 55, // bigger coins
+                          size: 40,
                           color: Theme.of(context).colorScheme.primary,
                         ),
                       ],
                     ),
                     Text(
-                      'Due: September 25, 2025',
+                      'Due: ${billingProvider.dueDate.day}-${billingProvider.dueDate.month}-${billingProvider.dueDate.year}',
                       style: TextStyle(
                         fontSize: 12,
+                        fontWeight: FontWeight.w600,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -210,6 +208,7 @@ class DashboardPage extends StatelessWidget {
                 ),
               ),
             ),
+
             // --- Two Action Cards ---
             Row(
               children: [
@@ -271,14 +270,13 @@ class DashboardPage extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: SizedBox(
-                    height: 150, // 👈 same fixed height for symmetry
+                    height: 150,
                     child: GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                BillBreakdownPage(), // 👈 page 1
+                            builder: (context) => BillBreakdownPage(),
                           ),
                         );
                       },
@@ -291,8 +289,7 @@ class DashboardPage extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment.center, // 👈 centers nicely
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 LucideIcons.droplets,
@@ -309,9 +306,9 @@ class DashboardPage extends StatelessWidget {
                                 ),
                                 textAlign: TextAlign.center,
                               ),
-                              const Text(
-                                '452.324 m³',
-                                style: TextStyle(
+                              Text(
+                                '${billingProvider.lastMonthUsage.toStringAsFixed(3)} m³',
+                                style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.white,
                                 ),
