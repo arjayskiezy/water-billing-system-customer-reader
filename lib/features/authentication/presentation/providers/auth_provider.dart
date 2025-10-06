@@ -7,6 +7,9 @@ class AuthProvider extends ChangeNotifier {
   bool _loggedIn = false;
   UserRole? _role;
 
+  bool _isLoading = true;
+  bool get isLoading => _isLoading;
+
   String? _firstName;
   String? _lastName;
   int? _accountNumber; // for customer
@@ -38,8 +41,9 @@ class AuthProvider extends ChangeNotifier {
           ? UserRole.customer
           : UserRole.reader;
       _loggedIn = true;
-      notifyListeners();
     }
+    _isLoading = false;
+    notifyListeners();
   }
 
   // -------------------- Login --------------------

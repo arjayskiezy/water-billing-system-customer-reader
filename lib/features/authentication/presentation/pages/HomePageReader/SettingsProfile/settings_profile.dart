@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../LoginPage/login_page.dart';
+import '../../../providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -235,6 +237,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 title: 'Logout',
                 content: 'Are you sure you want to logout?',
                 onConfirm: () {
+                  // Perform logout logic
+                  Provider.of<AuthProvider>(context, listen: false).logout();
                   Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => const LoginPage()),
