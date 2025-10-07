@@ -105,7 +105,10 @@ class _ForgotPasswordPageBody extends StatelessWidget {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: () => provider.sendResetLink(context),
+            onPressed: provider.isLoading
+                ? null
+                : () => provider.sendResetLink(context),
+            // onPressed: () => provider.sendResetLink(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.primary,
               foregroundColor: Colors.white,
@@ -114,10 +117,12 @@ class _ForgotPasswordPageBody extends StatelessWidget {
               ),
               elevation: 5,
             ),
-            child: const Text(
-              'Send Link',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
+            child: provider.isLoading
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text(
+                    'Send Link',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
           ),
         ),
 
@@ -160,6 +165,7 @@ class _ForgotPasswordPageBody extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           'Password reset link sent!',
+          textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: colors.primary,

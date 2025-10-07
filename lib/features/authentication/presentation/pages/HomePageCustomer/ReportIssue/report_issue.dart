@@ -1,31 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/CustomerProviders/report_issue_provider.dart';
 
-class ReportIssuePage extends StatefulWidget {
+class ReportIssuePage extends StatelessWidget {
   const ReportIssuePage({super.key});
 
   @override
-  State<ReportIssuePage> createState() => _ReportIssuePageState();
-}
-
-class _ReportIssuePageState extends State<ReportIssuePage> {
-  final TextEditingController _descriptionController = TextEditingController();
-  String? _selectedTitle;
-
-  // Predefined water issue titles
-  final List<String> _issueTitles = [
-    'No Water',
-    'Not Clean Water',
-    'Billing / Payment Error',
-    'Meter Reading Error',
-    'Other',
-  ];
-
-  @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<ReportIssueProvider>(context);
     final colors = Theme.of(context).colorScheme;
 
+    final issueTitles = [
+      'No Water',
+      'Not Clean Water',
+      'Billing / Payment Error',
+      'Meter Reading Error',
+      'Other',
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Report an Issue'), centerTitle: false),
+      appBar: AppBar(title: const Text('Report an Issue')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -52,76 +46,52 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
             ),
             const SizedBox(height: 16),
 
-            // --- Issue Title Dropdown ---
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    labelText: 'Issue Title',
-                    labelStyle: TextStyle(
-                      color: colors.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  value: _selectedTitle,
-                  items: _issueTitles
-                      .map(
-                        (title) =>
-                            DropdownMenuItem(value: title, child: Text(title)),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedTitle = value;
-                    });
-                  },
+            // --- Dropdown ---
+            DropdownButtonFormField<String>(
+              value: provider.selectedTitle,
+              decoration: InputDecoration(
+                labelText: 'Issue Title',
+                labelStyle: TextStyle(
+                  color: colors.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
+              items: issueTitles
+                  .map(
+                    (title) =>
+                        DropdownMenuItem(value: title, child: Text(title)),
+                  )
+                  .toList(),
+              onChanged: provider.setTitle,
             ),
             const SizedBox(height: 12),
 
-            // --- Issue Description Field ---
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: TextField(
-                  controller: _descriptionController,
-                  maxLines: 4,
-                  textAlignVertical: TextAlignVertical.top,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    labelText: 'Description',
-                    labelStyle: TextStyle(
-                      color: colors.tertiary,
-                      fontWeight: FontWeight.w100,
-                    ),
-                    hintText: 'Describe the problem in detail...',
-                    hintStyle: TextStyle(color: colors.onSurfaceVariant),
-                  ),
+            // --- Description Field ---
+            TextField(
+              onChanged: provider.setDescription,
+              maxLines: 4,
+              decoration: InputDecoration(
+                labelText: 'Description',
+                hintText: 'Describe the problem in detail...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
             ),
             const SizedBox(height: 16),
 
-            // --- Optional Screenshot / Attachment Button ---
+            // --- Attachment Button ---
             ElevatedButton.icon(
-              onPressed: () {
-                // TODO: Add file picker functionality
-              },
+              onPressed: provider.pickAttachment,
               icon: const Icon(Icons.attach_file, color: Colors.white),
-              label: const Text(
-                'Attach File (Optional)',
-                style: TextStyle(color: Colors.white),
+              label: Text(
+                provider.attachment == null
+                    ? 'Attach File (Optional)'
+                    : 'Attached: ${provider.attachment!.path.split('/').last}',
+                style: const TextStyle(color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
@@ -135,27 +105,18 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
 
             // --- Submit Button ---
             ElevatedButton.icon(
-              onPressed: () {
-                if (_selectedTitle == null ||
-                    _descriptionController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Please select an issue title and enter a description',
-                      ),
-                    ),
-                  );
-                  return;
-                }
-
-                // TODO: Submit the issue
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Issue submitted!')),
-                );
-              },
-              icon: Icon(Icons.send, color: colors.primary),
+              onPressed: provider.isSubmitting
+                  ? null
+                  : () => provider.submitIssue(context),
+              icon: provider.isSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(Icons.send, color: colors.primary),
               label: Text(
-                'Submit Issue',
+                provider.isSubmitting ? 'Submitting...' : 'Submit Issue',
                 style: TextStyle(color: colors.primary),
               ),
               style: ElevatedButton.styleFrom(
@@ -172,26 +133,4 @@ class _ReportIssuePageState extends State<ReportIssuePage> {
       ),
     );
   }
-
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    super.dispose();
-  }
-}
-
-// --- Main entry point ---
-void main() {
-  runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00539A),
-          primary: const Color(0xFF00539A),
-        ),
-      ),
-      home: const ReportIssuePage(),
-    ),
-  );
 }

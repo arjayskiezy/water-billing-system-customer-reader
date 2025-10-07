@@ -9,6 +9,8 @@ import 'features/authentication/presentation/providers/CustomerProviders/billing
 import 'features/authentication/presentation/providers/CustomerProviders/billing_history_page_provider.dart';
 import 'features/authentication/presentation/providers/CustomerProviders/billing_usage_page_provider.dart';
 import 'features/authentication/presentation/providers/CustomerProviders/announcement_provider.dart';
+import 'features/authentication/presentation/providers/CustomerProviders/report_issue_provider.dart';
+
 import 'features/authentication/presentation/providers/ReaderProviders/progress_provider.dart';
 import 'features/authentication/presentation/providers/ReaderProviders/assigned_area_provider.dart';
 import 'features/authentication/presentation/providers/ReaderProviders/water_reading_provider.dart';
@@ -29,6 +31,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => AssignedAreaProvider()),
         ChangeNotifierProvider(create: (_) => WaterReadingProvider()),
         ChangeNotifierProvider(create: (_) => StorageProvider()),
+        ChangeNotifierProvider(create: (_) => ReportIssueProvider()),
       ],
       child: const MyApp(),
     ),

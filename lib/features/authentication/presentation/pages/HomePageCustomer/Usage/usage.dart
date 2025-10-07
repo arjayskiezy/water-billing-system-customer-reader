@@ -34,7 +34,7 @@ class BillBreakdownPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Billing Breakdown"),
+        title: const Text("Billing Summary"),
         centerTitle: true,
         elevation: 1,
         backgroundColor: Colors.white,
@@ -80,10 +80,10 @@ class BillBreakdownPage extends StatelessWidget {
                   billingRow(
                     'Total Usage',
                     provider.totalUsage,
-                    valueStyle: const TextStyle(
+                    valueStyle: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
-                      color: Colors.blue,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const Divider(height: 36),
@@ -130,10 +130,10 @@ class BillBreakdownPage extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
                     ),
-                    valueStyle: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                    valueStyle: TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const Divider(height: 36),
