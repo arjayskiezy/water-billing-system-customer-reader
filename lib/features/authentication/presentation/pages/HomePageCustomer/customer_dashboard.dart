@@ -11,6 +11,8 @@ import './ReportIssue/report_issue.dart';
 
 import '../../providers/AuthProvider/auth_provider.dart';
 import '../../providers/CustomerProviders/billing_history&usage_provider.dart';
+import '../../providers/CustomerProviders/billing_usage_page_provider.dart';
+
 import '../LoginPage/login_page.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -21,6 +23,9 @@ class DashboardPage extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     final authProvider = Provider.of<AuthProvider>(context);
     final billingProvider = Provider.of<BillingProvider>(context);
+    final billingBreakdownProvider = Provider.of<BillBreakdownProvider>(
+      context,
+    );
 
     // Fetch billing info once
     if (billingProvider.currentAmountDue == 0) {
@@ -142,7 +147,7 @@ class DashboardPage extends StatelessWidget {
             // =========================
             // Current Amount Due
             // =========================
-            _buildAmountDueCard(context, billingProvider),
+            _buildAmountDueCard(context, billingBreakdownProvider),
 
             // =========================
             // Action Cards (Billing History + Usage)
@@ -249,50 +254,316 @@ class DashboardPage extends StatelessWidget {
 
   Widget _buildAmountDueCard(
     BuildContext context,
-    BillingProvider billingProvider,
+    BillBreakdownProvider billingBreakdownProvider,
   ) {
     final colors = Theme.of(context).colorScheme;
-    return Card(
-      color: colors.surfaceVariant,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Current Amount Due',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '₱${billingProvider.currentAmountDue.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: colors.primary,
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.white,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          builder: (context) {
+            return DraggableScrollableSheet(
+              expand: false,
+              initialChildSize: 0.85,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              builder: (context, scrollController) {
+                return SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      Container(
+                        width: 60,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          'Summary of your current charges, past payments, and overall account balance.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.black54),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // =====================
+                      // Combined Usage Details + Timeline
+                      // =====================
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          'Usage Details',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Previous Reading
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Previous Reading',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '${billingBreakdownProvider.previousReading} m³',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat('MMM d, y').format(
+                                    billingBreakdownProvider
+                                        .previousReadingDate,
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // Timeline in middle
+                            Column(
+                              children: [
+                                const Icon(
+                                  Icons.timeline,
+                                  color: Colors.blueGrey,
+                                ),
+                                Text(
+                                  '${billingBreakdownProvider.readingIntervalDays} days',
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // Current Reading
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                const Text(
+                                  'Current Reading',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Text(
+                                  '${billingBreakdownProvider.currentReading} m³',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  DateFormat('MMM d, y').format(
+                                    billingBreakdownProvider.currentReadingDate,
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const Divider(height: 36),
+
+                      // Total Usage
+                      _billingRow(
+                        'Total Usage',
+                        '${billingBreakdownProvider.totalUsage} m³',
+                        valueStyle: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+
+                      const Divider(height: 36),
+
+                      // =====================
+                      // Billing Breakdown
+                      // =====================
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Text(
+                          'Billing Breakdown',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      _billingRow(
+                        'Water Consumption',
+                        '₱${billingBreakdownProvider.waterConsumption.toStringAsFixed(2)}',
+                      ),
+                      _billingRow(
+                        'Maintenance Fee',
+                        '₱${billingBreakdownProvider.maintenanceFee.toStringAsFixed(2)}',
+                      ),
+                      _billingRow(
+                        'Taxes',
+                        '₱${billingBreakdownProvider.taxes.toStringAsFixed(2)}',
+                      ),
+                      _billingRow(
+                        'Unpaid Bill',
+                        '₱${billingBreakdownProvider.unpaidBill.toStringAsFixed(2)}',
+                        valueStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BillingHistoryPage(),
+                            ),
+                          );
+                        },
+                      ),
+
+                      const Divider(height: 36),
+
+                      _billingRow(
+                        'Total Payment',
+                        '₱${billingBreakdownProvider.totalPayment.toStringAsFixed(2)}',
+                        labelStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        valueStyle: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.w800,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+
+                      const Divider(height: 36),
+                      const Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Text(
+                          'Please ensure that your bill is paid before the due date. For assistance, contact our customer service.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13, color: Colors.black54),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
                   ),
+                );
+              },
+            );
+          },
+        );
+      },
+      child: Card(
+        color: colors.surfaceVariant,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Current Amount Due',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurfaceVariant,
                 ),
-                const SizedBox(width: 20),
-                Icon(LucideIcons.coins, size: 40, color: colors.primary),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Due: ${DateFormat('MMMM d, y').format(billingProvider.dueDate)}',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: colors.onSurfaceVariant,
               ),
+              const SizedBox(height: 2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '₱${billingBreakdownProvider.currentAmountDue.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: colors.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 20),
+                  Icon(LucideIcons.coins, size: 40, color: colors.primary),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Due: ${DateFormat('MMMM d, y').format(billingBreakdownProvider.dueDate)}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // A small helper for rows inside the modal
+  Widget _billingRow(
+    String label,
+    String value, {
+    TextStyle? labelStyle,
+    TextStyle? valueStyle,
+    VoidCallback? onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
+      child: InkWell(
+        onTap: onTap,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: labelStyle ?? const TextStyle(fontSize: 14)),
+            Text(
+              value,
+              style:
+                  valueStyle ??
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ],
         ),

@@ -145,7 +145,7 @@ class BillBreakdownPage extends StatelessWidget {
                       style: TextStyle(fontSize: 13, color: Colors.black54),
                     ),
                   ),
-                  const SizedBox(height: 80),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
