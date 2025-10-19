@@ -36,11 +36,11 @@ class BillBreakdownProvider extends ChangeNotifier {
       waterConsumption + maintenanceFee + taxes + unpaidBill;
 
   // --- Fetch Data from API / Service ---
-  Future<void> fetchBillBreakdown(String userId) async {
+  Future<void> fetchBillBreakdown(String accountNumber) async {
     try {
-      print('Fetching bill for user: $userId'); // Debug start
+      print('Fetching bill for user: $accountNumber'); // Debug start
       final data = await ApiService.get(
-        '/bills/$userId',
+        '/bills/$accountNumber',
       ); // Make sure userId is included
 
       print('Raw API response: $data'); // Debug raw JSON
