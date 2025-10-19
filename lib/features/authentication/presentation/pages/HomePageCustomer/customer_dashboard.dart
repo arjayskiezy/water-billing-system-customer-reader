@@ -32,6 +32,12 @@ class DashboardPage extends StatelessWidget {
       billingProvider.fetchBillingInfo(authProvider.accountNumber.toString());
     }
 
+    if (billingBreakdownProvider.currentAmountDue == 0) {
+      billingBreakdownProvider.fetchBillBreakdown(
+        authProvider.accountNumber.toString(),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(

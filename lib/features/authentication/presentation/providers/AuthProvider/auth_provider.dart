@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../../shared/customer_storage.dart';
+import '../../../api/service.dart';
 
 enum UserRole { customer, reader }
 
@@ -12,16 +15,15 @@ class AuthProvider extends ChangeNotifier {
 
   String? _firstName;
   String? _lastName;
-  int? _accountNumber; // for customer
-  int? _meterNumber; // for customer
-  String? _uid; // for reader
+  int? _accountNumber;
+  int? _meterNumber;
+  String? _uid;
 
   final CustomerStorage _storage = CustomerStorage();
 
   // -------------------- Getters --------------------
   bool get loggedIn => _loggedIn;
   UserRole? get role => _role;
-
   String? get firstName => _firstName;
   String? get lastName => _lastName;
   int? get accountNumber => _accountNumber;
@@ -34,8 +36,8 @@ class AuthProvider extends ChangeNotifier {
     if (userData != null) {
       _firstName = userData['firstName'];
       _lastName = userData['lastName'];
-      _accountNumber = userData['accountNumber'];
-      _meterNumber = userData['meterNumber'];
+      _accountNumber = _tryParseInt(userData['accountNumber']);
+      _meterNumber = _tryParseInt(userData['meterNumber']);
       _uid = userData['uid'];
       _role = userData['role'] == 'customer'
           ? UserRole.customer
@@ -46,91 +48,75 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // -------------------- Login --------------------
-  /// Returns 'customer', 'reader', or 'error'
+  // -------------------- Utility Helpers --------------------
+  int? _tryParseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  Map<String, String> _splitName(String fullName) {
+    final parts = fullName.trim().split(' ');
+    if (parts.length == 1) {
+      return {'firstName': parts[0], 'lastName': ''};
+    } else {
+      return {'firstName': parts.first, 'lastName': parts.sublist(1).join(' ')};
+    }
+  }
+
+  // -------------------- LOGIN (Real Backend Call) --------------------
   Future<String> login({
     required String accountNumber,
     required String password,
   }) async {
-    // -------------------- Dummy Customer --------------------
-    const dummyCustomerUsername = '123456';
-    const dummyCustomerPassword = 'cust123';
+    try {
+      // ✅ Use your ApiService instead of hardcoded URL
+      final response = await ApiService.post('/login', {
+        'accountNumber': accountNumber,
+        'password': password,
+      });
 
-    if (accountNumber == dummyCustomerUsername &&
-        password == dummyCustomerPassword) {
-      _role = UserRole.customer;
-      _loggedIn = true;
-      _firstName = "Jane";
-      _lastName = "Doe";
-      _accountNumber = 123456;
-      _meterNumber = 987654;
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-      await _storage.saveUser(
-        firstName: _firstName!,
-        lastName: _lastName!,
-        accountNumber: _accountNumber!,
-        meterNumber: _meterNumber!,
-        role: 'customer',
-      );
+        if (data['status'] == 'success') {
+          final String role = data['role'];
+          _role = role == 'reader' ? UserRole.reader : UserRole.customer;
+          _loggedIn = true;
 
-      notifyListeners();
-      return 'customer';
+          // Split name and convert types
+          final split = _splitName(data['name'] ?? '');
+          _firstName = split['firstName'];
+          _lastName = split['lastName'];
+          _accountNumber = _tryParseInt(data['accountNumber']);
+          _meterNumber = _tryParseInt(data['meterNumber']);
+          _uid = data['readerCode'];
+
+          await _storage.saveUser(
+            firstName: _firstName!,
+            lastName: _lastName!,
+            accountNumber: _accountNumber ?? 0,
+            meterNumber: _meterNumber ?? 0,
+            uid: _uid,
+            role: role,
+          );
+
+          notifyListeners();
+          return role;
+        } else {
+          return 'error';
+        }
+      } else {
+        return 'error';
+      }
+    } catch (e) {
+      print('Login error: $e');
+      return 'error';
     }
-
-    // -------------------- Dummy Reader --------------------
-    const dummyReaderUsername = '123457';
-    const dummyReaderPassword = 'read123';
-
-    if (accountNumber == dummyReaderUsername &&
-        password == dummyReaderPassword) {
-      _role = UserRole.reader;
-      _loggedIn = true;
-      _firstName = "Justins";
-      _lastName = "Nabunturan";
-      _uid = "123456";
-
-      await _storage.saveUser(
-        firstName: _firstName!,
-        lastName: _lastName!,
-        uid: _uid!,
-        role: 'reader',
-      );
-
-      notifyListeners();
-      return 'reader';
-    }
-
-    // -------------------- API Login (Commented for future) --------------------
-    /*
-    final response = await ApiService.login(username, password);
-    if (response != null && response['status'] == 'success') {
-      _role = response['role'] == 'reader' ? UserRole.reader : UserRole.customer;
-      _loggedIn = true;
-      _firstName = response['firstName'];
-      _lastName = response['lastName'];
-      _accountNumber = response['accountNumber'];
-      _meterNumber = response['meterNumber'];
-      _uid = response['uid'];
-
-      await _storage.saveUser(
-        firstName: _firstName!,
-        lastName: _lastName!,
-        accountNumber: _accountNumber ?? 0,
-        meterNumber: _meterNumber ?? 0,
-        uid: _uid,
-        role: response['role'],
-      );
-
-      notifyListeners();
-      return response['role'];
-    }
-    */
-
-    // -------------------- Login failed --------------------
-    return 'error';
   }
 
-  // -------------------- Logout --------------------
+  // -------------------- LOGOUT --------------------
   Future<void> logout() async {
     _loggedIn = false;
     _role = null;

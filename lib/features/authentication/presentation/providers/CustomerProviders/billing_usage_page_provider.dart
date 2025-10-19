@@ -1,33 +1,89 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../../api/service.dart';
 
 class BillBreakdownProvider extends ChangeNotifier {
   // --- Current Billing Info ---
-  double currentAmountDue = 842.75; // realistic total amount due
-  DateTime dueDate = DateTime(2025, 10, 25); // due in ~2 weeks
+  double currentAmountDue = 0.0;
+  DateTime dueDate = DateTime.now();
 
   // --- Usage Details ---
-  double previousReading = 3580.420; // previous meter reading (m³)
-  double currentReading = 3604.685; // current reading (m³)
+  double previousReading = 0.0;
+  double currentReading = 0.0;
 
   // --- Reading Dates ---
-  DateTime previousReadingDate = DateTime(2025, 9, 5); // Sept 5, 2025
-  DateTime currentReadingDate = DateTime(2025, 10, 5); // Oct 5, 2025
+  DateTime previousReadingDate = DateTime.now();
+  DateTime currentReadingDate = DateTime.now();
 
   // --- Billing Breakdown ---
-  double waterConsumption = 650.50; // main water charge
-  double maintenanceFee = 75.00; // fixed monthly maintenance
-  double taxes = 35.25; // environmental + local tax
-  double unpaidBill = 82.00; // previous unpaid balance
-  double totalPayment = 842.75; // matches total amount due
+  double waterConsumption = 0.0;
+  double maintenanceFee = 0.0;
+  double taxes = 0.0;
+  double unpaidBill = 0.0;
+  double totalPayment = 0.0;
 
   // --- Computed getters ---
   String get totalUsage {
     final usage = currentReading - previousReading;
-    return "${usage.toStringAsFixed(3)}";
+    return usage.toStringAsFixed(3);
   }
 
   int get readingIntervalDays {
     return currentReadingDate.difference(previousReadingDate).inDays;
+  }
+
+  double get computedTotal =>
+      waterConsumption + maintenanceFee + taxes + unpaidBill;
+
+  // --- Fetch Data from API / Service ---
+  Future<void> fetchBillBreakdown(String userId) async {
+    try {
+      print('Fetching bill for user: $userId'); // Debug start
+      final data = await ApiService.get(
+        '/bills/$userId',
+      ); // Make sure userId is included
+
+      print('Raw API response: $data'); // Debug raw JSON
+
+      if (data != null) {
+        // Map JSON fields to provider variables
+        currentAmountDue = (data['currentAmountDue'] ?? 0).toDouble();
+        dueDate = DateTime.parse(data['dueDate'] ?? DateTime.now().toString());
+
+        previousReading = (data['previousReading'] ?? 0).toDouble();
+        currentReading = (data['currentReading'] ?? 0).toDouble();
+
+        previousReadingDate = DateTime.parse(
+          data['previousReadingDate'] ?? DateTime.now().toString(),
+        );
+        currentReadingDate = DateTime.parse(
+          data['currentReadingDate'] ?? DateTime.now().toString(),
+        );
+
+        waterConsumption = (data['waterConsumption'] ?? 0).toDouble();
+        maintenanceFee = (data['maintenanceFee'] ?? 0).toDouble();
+        taxes = (data['taxes'] ?? 0).toDouble();
+        unpaidBill = (data['unpaidBill'] ?? 0).toDouble();
+        totalPayment = (data['totalPayment'] ?? 0).toDouble();
+
+        print('Mapped values:');
+        print('currentAmountDue: $currentAmountDue');
+        print('dueDate: $dueDate');
+        print('previousReading: $previousReading');
+        print('currentReading: $currentReading');
+        print('waterConsumption: $waterConsumption');
+        print('maintenanceFee: $maintenanceFee');
+        print('taxes: $taxes');
+        print('unpaidBill: $unpaidBill');
+        print('totalPayment: $totalPayment');
+
+        notifyListeners();
+      } else {
+        throw Exception('No billing data returned from service.');
+      }
+    } catch (e) {
+      print('Error fetching bill via Service API: $e');
+    }
   }
 
   // --- Update Methods ---
@@ -64,8 +120,4 @@ class BillBreakdownProvider extends ChangeNotifier {
     if (newDueDate != null) dueDate = newDueDate;
     notifyListeners();
   }
-
-  // --- Optional: computed total (if you want to auto-compute later) ---
-  double get computedTotal =>
-      waterConsumption + maintenanceFee + taxes + unpaidBill;
 }
