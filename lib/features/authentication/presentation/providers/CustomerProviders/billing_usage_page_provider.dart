@@ -4,6 +4,7 @@ import '../../../api/service.dart';
 
 class BillBreakdownProvider extends ChangeNotifier {
   // --- Current Billing Info ---
+  double currentAmountDueMinus = 0.0;
   double currentAmountDue = 0.0;
   DateTime dueDate = DateTime.now();
 
@@ -84,6 +85,21 @@ class BillBreakdownProvider extends ChangeNotifier {
     } catch (e) {
       print('Error fetching bill via Service API: $e');
     }
+  }
+
+  void reset() {
+    currentAmountDue = 0.0;
+    previousReading = 0.0;
+    currentReading = 0.0;
+    waterConsumption = 0.0;
+    maintenanceFee = 0.0;
+    taxes = 0.0;
+    unpaidBill = 0.0;
+    totalPayment = 0.0;
+    previousReadingDate = DateTime.now();
+    currentReadingDate = DateTime.now();
+    dueDate = DateTime.now();
+    notifyListeners();
   }
 
   // --- Update Methods ---

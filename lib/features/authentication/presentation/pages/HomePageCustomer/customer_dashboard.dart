@@ -15,28 +15,46 @@ import '../../providers/CustomerProviders/billing_usage_page_provider.dart';
 
 import '../LoginPage/login_page.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  @override
+  void initState() {
+    super.initState();
+    _fetchBillingData();
+  }
+
+  void _fetchBillingData() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final billingBreakdownProvider = Provider.of<BillBreakdownProvider>(
+      context,
+      listen: false,
+    );
+    final billingProvider = Provider.of<BillingProvider>(
+      context,
+      listen: false,
+    );
+
+    // Fetch billing breakdown for current user
+    billingBreakdownProvider.fetchBillBreakdown(
+      authProvider.accountNumber.toString(),
+    );
+
+    // Fetch last month usage info if not fetched
+    if (billingProvider.currentAmountDue == 0) {
+      billingProvider.fetchBillingInfo(authProvider.accountNumber.toString());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final authProvider = Provider.of<AuthProvider>(context);
-    final billingProvider = Provider.of<BillingProvider>(context);
-    final billingBreakdownProvider = Provider.of<BillBreakdownProvider>(
-      context,
-    );
-
-    // Fetch billing info once
-    if (billingProvider.currentAmountDue == 0) {
-      billingProvider.fetchBillingInfo(authProvider.accountNumber.toString());
-    }
-
-    if (billingBreakdownProvider.currentAmountDue == 0) {
-      billingBreakdownProvider.fetchBillBreakdown(
-        authProvider.accountNumber.toString(),
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -46,8 +64,6 @@ class DashboardPage extends StatelessWidget {
         ),
         centerTitle: false,
       ),
-
-      // Floating "Report Issue" button at bottom right
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
@@ -62,136 +78,29 @@ class DashboardPage extends StatelessWidget {
         ),
         backgroundColor: colors.primary,
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _buildProfileCard(context, authProvider, colors),
+            const SizedBox(height: 12),
+
             // =========================
-            // Profile Card
+            // Current Amount Due Card (Consumer rebuilds on provider change)
             // =========================
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Avatar
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: colors.primary,
-                      child: Text(
-                        '${(authProvider.firstName ?? '').isNotEmpty ? authProvider.firstName![0] : ''}'
-                        '${(authProvider.lastName ?? '').isNotEmpty ? authProvider.lastName![0] : ''}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    // User Info
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hello, ${authProvider.firstName} ${authProvider.lastName}',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.headlineSmall?.copyWith(fontSize: 14),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Account #: ${authProvider.accountNumber}',
-                            style: Theme.of(
-                              context,
-                            ).textTheme.titleSmall?.copyWith(fontSize: 12),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.wifi,
-                                color: Colors.green,
-                                size: 16,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Online',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colors.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Logout button
-                    IconButton(
-                      onPressed: () {
-                        _showLogoutDialog(context);
-                      },
-                      icon: const Icon(Icons.logout, color: Colors.red),
-                      tooltip: 'Logout',
-                    ),
-                  ],
-                ),
-              ),
+            Consumer<BillBreakdownProvider>(
+              builder: (context, billingBreakdownProvider, child) {
+                return _buildAmountDueCard(context, billingBreakdownProvider);
+              },
             ),
 
-            // =========================
-            // Current Amount Due
-            // =========================
-            _buildAmountDueCard(context, billingBreakdownProvider),
+            const SizedBox(height: 12),
 
             // =========================
-            // Action Cards (Billing History + Usage)
+            // Action Cards
             // =========================
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    title: 'Billing History',
-                    subtitle: 'Last 18 months',
-                    icon: LucideIcons.clock,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const BillingHistoryPage(),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    title: 'Usage',
-                    subtitle:
-                        '${billingProvider.lastMonthUsage.toStringAsFixed(3)} m³\nLast Month',
-                    icon: LucideIcons.droplets,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const BillBreakdownPage(),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _buildActionCards(context),
 
             const SizedBox(height: 12),
 
@@ -199,7 +108,7 @@ class DashboardPage extends StatelessWidget {
             // Announcements
             // =========================
             Card(
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: colors.surfaceVariant,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -254,10 +163,112 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // =========================
-  // Helper Widgets
-  // =========================
+  Widget _buildProfileCard(
+    BuildContext context,
+    AuthProvider authProvider,
+    ColorScheme colors,
+  ) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: colors.primary,
+              child: Text(
+                '${(authProvider.firstName ?? '').isNotEmpty ? authProvider.firstName![0] : ''}'
+                '${(authProvider.lastName ?? '').isNotEmpty ? authProvider.lastName![0] : ''}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hello, ${authProvider.firstName} ${authProvider.lastName}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.headlineSmall?.copyWith(fontSize: 14),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Account #: ${authProvider.accountNumber}',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.copyWith(fontSize: 12),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.wifi, color: Colors.green, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Online',
+                        style: TextStyle(fontSize: 12, color: colors.primary),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () => _showLogoutDialog(context),
+              icon: const Icon(Icons.logout, color: Colors.red),
+              tooltip: 'Logout',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
+  Widget _buildActionCards(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final billingProvider = Provider.of<BillingProvider>(context);
+    return Row(
+      children: [
+        Expanded(
+          child: _buildActionCard(
+            context,
+            title: 'Billing History',
+            subtitle: 'Last 18 months',
+            icon: LucideIcons.clock,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BillingHistoryPage()),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _buildActionCard(
+            context,
+            title: 'Usage',
+            subtitle:
+                '${billingProvider.lastMonthUsage.toStringAsFixed(3)} m³\nLast Month',
+            icon: LucideIcons.droplets,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BillBreakdownPage()),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // =========================
+  // Amount Due Card + Modal Sheet
+  // =========================
   Widget _buildAmountDueCard(
     BuildContext context,
     BillBreakdownProvider billingBreakdownProvider,
@@ -267,6 +278,7 @@ class DashboardPage extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {
+        // Modal sheet
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
@@ -296,7 +308,7 @@ class DashboardPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.0),
+                        padding: EdgeInsets.symmetric(horizontal: 24),
                         child: Text(
                           'Summary of your current charges, past payments, and overall account balance.',
                           textAlign: TextAlign.center,
@@ -304,194 +316,10 @@ class DashboardPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-
-                      // =====================
-                      // Combined Usage Details + Timeline
-                      // =====================
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Text(
-                          'Usage Details',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      _buildBillingModalContent(
+                        context,
+                        billingBreakdownProvider,
                       ),
-                      const SizedBox(height: 12),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Previous Reading
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Previous Reading',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  '${billingBreakdownProvider.previousReading} m³',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  DateFormat('MMM d, y').format(
-                                    billingBreakdownProvider
-                                        .previousReadingDate,
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Timeline in middle
-                            Column(
-                              children: [
-                                const Icon(
-                                  Icons.timeline,
-                                  color: Colors.blueGrey,
-                                ),
-                                Text(
-                                  '${billingBreakdownProvider.readingIntervalDays} days',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Current Reading
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                const Text(
-                                  'Current Reading',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                Text(
-                                  '${billingBreakdownProvider.currentReading} m³',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  DateFormat('MMM d, y').format(
-                                    billingBreakdownProvider.currentReadingDate,
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const Divider(height: 36),
-
-                      // Total Usage
-                      _billingRow(
-                        'Total Usage',
-                        '${billingBreakdownProvider.totalUsage} m³',
-                        valueStyle: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-
-                      const Divider(height: 36),
-
-                      // =====================
-                      // Billing Breakdown
-                      // =====================
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24.0),
-                        child: Text(
-                          'Billing Breakdown',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      _billingRow(
-                        'Water Consumption',
-                        '₱${billingBreakdownProvider.waterConsumption.toStringAsFixed(2)}',
-                      ),
-                      _billingRow(
-                        'Maintenance Fee',
-                        '₱${billingBreakdownProvider.maintenanceFee.toStringAsFixed(2)}',
-                      ),
-                      _billingRow(
-                        'Taxes',
-                        '₱${billingBreakdownProvider.taxes.toStringAsFixed(2)}',
-                      ),
-                      _billingRow(
-                        'Unpaid Bill',
-                        '₱${billingBreakdownProvider.unpaidBill.toStringAsFixed(2)}',
-                        valueStyle: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const BillingHistoryPage(),
-                            ),
-                          );
-                        },
-                      ),
-
-                      const Divider(height: 36),
-
-                      _billingRow(
-                        'Total Payment',
-                        '₱${billingBreakdownProvider.totalPayment.toStringAsFixed(2)}',
-                        labelStyle: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
-                        valueStyle: TextStyle(
-                          fontSize: 25,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-
-                      const Divider(height: 36),
-                      const Padding(
-                        padding: EdgeInsets.all(24.0),
-                        child: Text(
-                          'Please ensure that your bill is paid before the due date. For assistance, contact our customer service.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: Colors.black54),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
                     ],
                   ),
                 );
@@ -549,7 +377,145 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // A small helper for rows inside the modal
+  Widget _buildBillingModalContent(
+    BuildContext context,
+    BillBreakdownProvider billingBreakdownProvider,
+  ) {
+    return Column(
+      children: [
+        // Usage details
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Previous Reading',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    '${billingBreakdownProvider.previousReading} m³',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat(
+                      'MMM d, y',
+                    ).format(billingBreakdownProvider.previousReadingDate),
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  const Icon(Icons.timeline, color: Colors.blueGrey),
+                  Text(
+                    '${billingBreakdownProvider.readingIntervalDays} days',
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text(
+                    'Current Reading',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    '${billingBreakdownProvider.currentReading} m³',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat(
+                      'MMM d, y',
+                    ).format(billingBreakdownProvider.currentReadingDate),
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 36),
+        _billingRow(
+          'Total Usage',
+          '${billingBreakdownProvider.totalUsage} m³',
+          valueStyle: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w800,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        const Divider(height: 36),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Billing Breakdown',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        _billingRow(
+          'Water Consumption',
+          '₱${billingBreakdownProvider.waterConsumption.toStringAsFixed(2)}',
+        ),
+        _billingRow(
+          'Maintenance Fee',
+          '₱${billingBreakdownProvider.maintenanceFee.toStringAsFixed(2)}',
+        ),
+        _billingRow(
+          'Taxes',
+          '₱${billingBreakdownProvider.taxes.toStringAsFixed(2)}',
+        ),
+        _billingRow(
+          'Unpaid Bill',
+          '₱${billingBreakdownProvider.unpaidBill.toStringAsFixed(2)}',
+          onTap: () {
+            Navigator.pop(context);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BillingHistoryPage()),
+            );
+          },
+        ),
+        const Divider(height: 36),
+        _billingRow(
+          'Total Payment',
+          '₱${billingBreakdownProvider.totalPayment.toStringAsFixed(2)}',
+          labelStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+          valueStyle: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.w800,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+        const Divider(height: 36),
+        const Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'Please ensure that your bill is paid before the due date. For assistance, contact our customer service.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
   Widget _billingRow(
     String label,
     String value, {
@@ -558,7 +524,7 @@ class DashboardPage extends StatelessWidget {
     VoidCallback? onTap,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: InkWell(
         onTap: onTap,
         child: Row(
@@ -639,6 +605,10 @@ class DashboardPage extends StatelessWidget {
           TextButton(
             onPressed: () {
               Provider.of<AuthProvider>(context, listen: false).logout();
+              Provider.of<BillBreakdownProvider>(
+                context,
+                listen: false,
+              ).reset();
               Navigator.of(context).pop();
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const LoginPage()),
