@@ -1,15 +1,24 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/ReaderProviders/water_reading_provider.dart';
+import '../../../providers/AuthProvider/auth_provider.dart';
 
 class WaterReadingPage extends StatefulWidget {
   final String areaName;
   final bool isEditing;
+  final String previousReading;
+  final String address;
+  final String meterNumber;
 
   const WaterReadingPage({
     super.key,
     required this.areaName,
+    required this.meterNumber,
     required this.isEditing,
+    this.previousReading = '-',
+    this.address = '-',
   });
 
   @override
@@ -21,14 +30,15 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<WaterReadingProvider>();
-      provider.initializeReading(widget.isEditing ? '1,234' : '');
+      // Initialize reading controller empty
+      context.read<WaterReadingProvider>().initializeReading('');
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<WaterReadingProvider>();
+    final authProvider = context.read<AuthProvider>(); // to get readerCode
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -47,7 +57,7 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Area Card
+            // Area Info Card
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -68,9 +78,9 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text(
-                      'Magallanes Street',
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    Text(
+                      'Address: ${widget.address}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                     const SizedBox(height: 8),
                     RichText(
@@ -82,7 +92,9 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
                             style: TextStyle(color: Colors.grey),
                           ),
                           TextSpan(
-                            text: widget.isEditing ? '1,234 m³' : '-',
+                            text: widget.previousReading != '-'
+                                ? '${widget.previousReading} m³'
+                                : '-',
                             style: TextStyle(
                               color: colors.primary,
                               fontWeight: FontWeight.bold,
@@ -96,7 +108,7 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
               ),
             ),
 
-            // Current Reading
+            // Current Reading Input
             TextField(
               controller: provider.readingController,
               keyboardType: TextInputType.number,
@@ -158,7 +170,7 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
             ),
             const SizedBox(height: 20),
 
-            // Notes
+            // Notes Input
             TextField(
               controller: provider.notesController,
               maxLines: 3,
@@ -182,7 +194,13 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
             ElevatedButton(
               onPressed: provider.isSaving
                   ? null
-                  : () => provider.saveReading(context, offline: false),
+                  : () => provider.saveReading(
+                      context,
+                      offline: false,
+                      meterNumber: widget.meterNumber,
+                      readerCode:
+                          authProvider.readerCode ?? '', // from AuthProvider
+                    ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 18),
@@ -208,7 +226,12 @@ class _WaterReadingPageState extends State<WaterReadingPage> {
             ElevatedButton(
               onPressed: provider.isSaving
                   ? null
-                  : () => provider.saveReading(context, offline: true),
+                  : () => provider.saveReading(
+                      context,
+                      offline: true,
+                      meterNumber: widget.meterNumber,
+                      readerCode: authProvider.readerCode ?? '',
+                    ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),

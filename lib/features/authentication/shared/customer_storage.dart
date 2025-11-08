@@ -6,18 +6,20 @@ class CustomerStorage {
     required String firstName,
     required String lastName,
     String? role, // 'customer' or 'reader'
-    int? accountNumber, // for customer
-    int? meterNumber, // for customer
-    String? uid, // for reader
+    String? accountNumber, // for customer
+    String? meterNumber, // for customer
+    String? readerCode, // for reader
+    int? userId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('firstName', firstName);
     await prefs.setString('lastName', lastName);
     if (accountNumber != null)
-      await prefs.setInt('accountNumber', accountNumber);
-    if (meterNumber != null) await prefs.setInt('meterNumber', meterNumber);
-    if (uid != null) await prefs.setString('uid', uid);
+      await prefs.setString('accountNumber', accountNumber);
+    if (meterNumber != null) await prefs.setString('meterNumber', meterNumber);
+    if (readerCode != null) await prefs.setString('readerCode', readerCode);
     if (role != null) await prefs.setString('role', role);
+    if (userId != null) await prefs.setInt('userId', userId);
     await prefs.setBool('loggedIn', true);
   }
 
@@ -28,10 +30,11 @@ class CustomerStorage {
       return {
         'firstName': prefs.getString('firstName'),
         'lastName': prefs.getString('lastName'),
-        'accountNumber': prefs.getInt('accountNumber'), // nullable
-        'meterNumber': prefs.getInt('meterNumber'), // nullable
-        'uid': prefs.getString('uid'), // nullable
+        'accountNumber': prefs.getString('accountNumber'), // nullable
+        'meterNumber': prefs.getString('meterNumber'), // nullable
+        'readerCode': prefs.getString('readerCode'), // nullable
         'role': prefs.getString('role'), // 'customer' or 'reader'
+        'userId': prefs.getInt('userId'), // nullable
       };
     }
     return null;

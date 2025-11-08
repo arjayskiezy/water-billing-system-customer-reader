@@ -46,7 +46,7 @@ class ReaderDashboardPage extends StatelessWidget {
 
     final fullName =
         "${authProvider.firstName ?? ''} ${authProvider.lastName ?? ''}".trim();
-    final uid = authProvider.uid ?? "Unknown UID";
+    final readerCode = authProvider.readerCode ?? "Unknown readerCode";
 
     return Scaffold(
       appBar: AppBar(
@@ -66,26 +66,37 @@ class ReaderDashboardPage extends StatelessWidget {
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeaderCard(theme, fullName, uid, time, date, day),
+                      _buildHeaderCard(
+                        theme,
+                        fullName,
+                        readerCode,
+                        time,
+                        date,
+                        day,
+                      ),
                       const SizedBox(height: 20),
                       _buildConnectionCard(theme, dashboardProvider),
                       const SizedBox(height: 20),
                       _buildStatsRow(theme, dashboardProvider),
                       const SizedBox(height: 20),
-                      _buildProgressCard(theme, dashboardProvider.completionRate),
+                      _buildProgressCard(
+                        theme,
+                        dashboardProvider.completionRate,
+                      ),
                       const SizedBox(height: 24),
                       _buildActionCard(
                         context,
                         theme,
                         icon: Icons.map_rounded,
                         title: "Field Operations",
-                        description:
-                            "Monitor and manage your assigned areas.",
+                        description: "Monitor and manage your assigned areas.",
                         buttonText: "View Assignments",
                         onTap: () => Navigator.push(
                           context,
@@ -120,8 +131,14 @@ class ReaderDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderCard(ThemeData theme, String fullName, String uid,
-      String time, String date, String day) {
+  Widget _buildHeaderCard(
+    ThemeData theme,
+    String fullName,
+    String readerCode,
+    String time,
+    String date,
+    String day,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -149,7 +166,12 @@ class ReaderDashboardPage extends StatelessWidget {
                 backgroundColor: Colors.white.withOpacity(0.25),
                 child: Text(
                   fullName.isNotEmpty
-                      ? fullName.split(" ").map((e) => e[0]).take(2).join().toUpperCase()
+                      ? fullName
+                            .split(" ")
+                            .map((e) => e[0])
+                            .take(2)
+                            .join()
+                            .toUpperCase()
                       : "?",
                   style: const TextStyle(
                     color: Colors.white,
@@ -164,10 +186,7 @@ class ReaderDashboardPage extends StatelessWidget {
                 children: [
                   Text(
                     _greetingMessage(),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -180,7 +199,7 @@ class ReaderDashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'UID: $uid',
+                    'readerCode: $readerCode',
                     style: const TextStyle(color: Colors.white70, fontSize: 11),
                   ),
                 ],
@@ -190,13 +209,22 @@ class ReaderDashboardPage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(time,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold)),
-              Text(date, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-              Text(day, style: const TextStyle(color: Colors.white60, fontSize: 11)),
+              Text(
+                time,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                date,
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              Text(
+                day,
+                style: const TextStyle(color: Colors.white60, fontSize: 11),
+              ),
             ],
           ),
         ],
@@ -204,7 +232,10 @@ class ReaderDashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildConnectionCard(ThemeData theme, ReaderDashboardProvider provider) {
+  Widget _buildConnectionCard(
+    ThemeData theme,
+    ReaderDashboardProvider provider,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: _threeDBox(Colors.white),
@@ -229,18 +260,38 @@ class ReaderDashboardPage extends StatelessWidget {
   Widget _buildStatsRow(ThemeData theme, ReaderDashboardProvider provider) {
     return Row(
       children: [
-        _buildStatCard(theme, "Remaining", provider.remaining.toString(),
-            Icons.pending_actions_rounded, Colors.orange),
-        _buildStatCard(theme, "Completed", provider.completed.toString(),
-            Icons.check_circle_rounded, Colors.green),
-        _buildStatCard(theme, "Assigned", provider.assigned.toString(),
-            Icons.work_rounded, Colors.blue),
+        _buildStatCard(
+          theme,
+          "Remaining",
+          provider.remaining.toString(),
+          Icons.pending_actions_rounded,
+          Colors.orange,
+        ),
+        _buildStatCard(
+          theme,
+          "Completed",
+          provider.completed.toString(),
+          Icons.check_circle_rounded,
+          Colors.green,
+        ),
+        _buildStatCard(
+          theme,
+          "Assigned",
+          provider.assigned.toString(),
+          Icons.work_rounded,
+          Colors.blue,
+        ),
       ],
     );
   }
 
-  Widget _buildStatCard(ThemeData theme, String title, String value,
-      IconData icon, Color color) {
+  Widget _buildStatCard(
+    ThemeData theme,
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         height: 100,
@@ -251,11 +302,18 @@ class ReaderDashboardPage extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 28),
             const SizedBox(height: 6),
-            Text(value,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87)),
-            Text(title,
-                style: const TextStyle(fontSize: 12, color: Colors.black54)),
+            Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black87,
+              ),
+            ),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
           ],
         ),
       ),
@@ -272,8 +330,7 @@ class ReaderDashboardPage extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.today_rounded,
-                  color: theme.primaryColor, size: 22),
+              Icon(Icons.today_rounded, color: theme.primaryColor, size: 22),
               const SizedBox(width: 6),
               Text(
                 "Today's Progress",
@@ -292,8 +349,7 @@ class ReaderDashboardPage extends StatelessWidget {
               value: progress.clamp(0.0, 1.0),
               minHeight: 12,
               backgroundColor: Colors.grey.shade200,
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(theme.primaryColor),
+              valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
             ),
           ),
           const SizedBox(height: 12),
@@ -303,14 +359,16 @@ class ReaderDashboardPage extends StatelessWidget {
               Text(
                 "$percent% complete",
                 style: const TextStyle(
-                    fontWeight: FontWeight.w600, fontSize: 13),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
               Text(
                 progress >= 1.0
                     ? "🎯 Done for the day!"
                     : progress >= 0.6
-                        ? "Almost there 💪"
-                        : "Keep going 🚀",
+                    ? "Almost there 💪"
+                    : "Keep going 🚀",
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.primaryColor,
@@ -321,8 +379,7 @@ class ReaderDashboardPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
               color: theme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
@@ -330,8 +387,11 @@ class ReaderDashboardPage extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.trending_up_rounded,
-                    color: Colors.green, size: 14),
+                const Icon(
+                  Icons.trending_up_rounded,
+                  color: Colors.green,
+                  size: 14,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   "+5% better than yesterday",
@@ -357,8 +417,7 @@ class ReaderDashboardPage extends StatelessWidget {
     required String description,
     required String buttonText,
     required VoidCallback onTap,
-  })
-   {
+  }) {
     return Container(
       decoration: _threeDBox(Colors.white),
       padding: const EdgeInsets.all(20),
@@ -377,31 +436,42 @@ class ReaderDashboardPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.primaryColor,
-                    )),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text(description,
-                    style:
-                        const TextStyle(fontSize: 12, color: Colors.black54)),
+                Text(
+                  description,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
                 const SizedBox(height: 10),
-               TextButton.icon(
-  onPressed: onTap,
-  icon: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white),
-  label: Text(
-    buttonText,
-    style: const TextStyle(fontSize: 12, color: Colors.white),
-  ),
-  style: TextButton.styleFrom(
-    backgroundColor: theme.primaryColor, // primary color background
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(10),
-    ),
-  ),
-)
+                TextButton.icon(
+                  onPressed: onTap,
+                  icon: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                  label: Text(
+                    buttonText,
+                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                  style: TextButton.styleFrom(
+                    backgroundColor:
+                        theme.primaryColor, // primary color background
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -419,9 +489,14 @@ class ReaderDashboardPage extends StatelessWidget {
       children: [
         Icon(icon, color: color, size: 20),
         const SizedBox(width: 6),
-        Text(text,
-            style: TextStyle(
-                color: color, fontWeight: FontWeight.w600, fontSize: 12)),
+        Text(
+          text,
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+        ),
       ],
     );
   }
@@ -447,14 +522,19 @@ class ReaderDashboardPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("Offline Data Storage Available",
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    )),
-                Text(provider.syncStatus,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: Colors.black54)),
+                Text(
+                  "Offline Data Storage Available",
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+                Text(
+                  provider.syncStatus,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.black54,
+                  ),
+                ),
               ],
             ),
           ),
@@ -466,8 +546,7 @@ class ReaderDashboardPage extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
-              padding:
-                  const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
               elevation: 5,
               shadowColor: theme.primaryColor.withOpacity(0.3),
             ),

@@ -28,7 +28,6 @@ void main() {
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
         ChangeNotifierProvider(create: (_) => ReaderDashboardProvider()),
         ChangeNotifierProvider(create: (_) => AssignedAreaProvider()),
-        ChangeNotifierProvider(create: (_) => AssignedAreaProvider()),
         ChangeNotifierProvider(create: (_) => WaterReadingProvider()),
         ChangeNotifierProvider(create: (_) => StorageProvider()),
         ChangeNotifierProvider(create: (_) => ReportIssueProvider()),

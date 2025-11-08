@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import '../../../shared/customer_storage.dart';
 import '../../../api/service.dart';
 
@@ -15,9 +14,10 @@ class AuthProvider extends ChangeNotifier {
 
   String? _firstName;
   String? _lastName;
-  int? _accountNumber;
-  int? _meterNumber;
-  String? _uid;
+  String? _accountNumber;
+  String? _meterNumber;
+  String? _readerCode;
+  int? _userId;
 
   final CustomerStorage _storage = CustomerStorage();
 
@@ -26,9 +26,10 @@ class AuthProvider extends ChangeNotifier {
   UserRole? get role => _role;
   String? get firstName => _firstName;
   String? get lastName => _lastName;
-  int? get accountNumber => _accountNumber;
-  int? get meterNumber => _meterNumber;
-  String? get uid => _uid;
+  String? get accountNumber => _accountNumber;
+  String? get meterNumber => _meterNumber;
+  String? get readerCode => _readerCode;
+  int? get userId => _userId;
 
   // -------------------- Load user from storage --------------------
   Future<void> loadUser() async {
@@ -36,9 +37,10 @@ class AuthProvider extends ChangeNotifier {
     if (userData != null) {
       _firstName = userData['firstName'];
       _lastName = userData['lastName'];
-      _accountNumber = _tryParseInt(userData['accountNumber']);
-      _meterNumber = _tryParseInt(userData['meterNumber']);
-      _uid = userData['uid'];
+      _accountNumber = _tryParseInt(userData['accountNumber'])?.toString();
+      _meterNumber = _tryParseInt(userData['meterNumber'])?.toString();
+      _readerCode = userData['readerCode'];
+      _userId = userData['userId'];
       _role = userData['role'] == 'customer'
           ? UserRole.customer
           : UserRole.reader;
@@ -79,7 +81,6 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         if (data['status'] == 'success') {
           final String role = data['role'];
           _role = role == 'reader' ? UserRole.reader : UserRole.customer;
@@ -89,16 +90,18 @@ class AuthProvider extends ChangeNotifier {
           final split = _splitName(data['name'] ?? '');
           _firstName = split['firstName'];
           _lastName = split['lastName'];
-          _accountNumber = _tryParseInt(data['accountNumber']);
-          _meterNumber = _tryParseInt(data['meterNumber']);
-          _uid = data['readerCode'];
+          _accountNumber = _tryParseInt(data['accountNumber'])?.toString();
+          _meterNumber = _tryParseInt(data['meterNumber'])?.toString();
+          _readerCode = data['readerCode'];
+          _userId = data['id'];
 
           await _storage.saveUser(
             firstName: _firstName!,
             lastName: _lastName!,
-            accountNumber: _accountNumber ?? 0,
-            meterNumber: _meterNumber ?? 0,
-            uid: _uid,
+            accountNumber: _accountNumber,
+            meterNumber: _meterNumber,
+            readerCode: _readerCode,
+            userId: _userId,
             role: role,
           );
 
@@ -124,7 +127,7 @@ class AuthProvider extends ChangeNotifier {
     _lastName = null;
     _accountNumber = null;
     _meterNumber = null;
-    _uid = null;
+    _readerCode = null;
 
     await _storage.clearUser();
     notifyListeners();

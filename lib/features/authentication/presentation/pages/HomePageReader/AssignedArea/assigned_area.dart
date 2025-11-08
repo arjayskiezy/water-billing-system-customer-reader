@@ -2,9 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../InputReadings/input_readings.dart';
 import '../../../providers/ReaderProviders/assigned_area_provider.dart';
+import '../../../../shared/customer_storage.dart';
 
-class AssignedAreaPage extends StatelessWidget {
+class AssignedAreaPage extends StatefulWidget {
   const AssignedAreaPage({super.key});
+
+  @override
+  State<AssignedAreaPage> createState() => _AssignedAreaPageState();
+}
+
+class _AssignedAreaPageState extends State<AssignedAreaPage> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAssignedAreas();
+  }
+
+  Future<void> _loadAssignedAreas() async {
+    final storage = CustomerStorage();
+    final user = await storage.getUser();
+    if (user != null && user['userId'] != null) {
+      await context.read<AssignedAreaProvider>().fetchAssignedAreas(
+        user['userId'],
+      );
+    }
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,80 +50,82 @@ class AssignedAreaPage extends StatelessWidget {
       ),
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Search Bar
-              TextField(
-                onChanged: provider.setSearchQuery,
-                decoration: InputDecoration(
-                  hintText: 'Search by name...',
-                  prefixIcon: Icon(Icons.search, color: colors.primary),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 0,
-                    horizontal: 16,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(25),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Filter Buttons
-              SizedBox(
-                height: 50,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
                   children: [
-                    _buildFilterButton(context, 'All'),
-                    _buildFilterButton(context, 'Pending'),
-                    _buildFilterButton(context, 'Completed'),
+                    // Search Bar
+                    TextField(
+                      onChanged: provider.setSearchQuery,
+                      decoration: InputDecoration(
+                        hintText: 'Search by name...',
+                        prefixIcon: Icon(Icons.search, color: colors.primary),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 0,
+                          horizontal: 16,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Filter Buttons
+                    SizedBox(
+                      height: 50,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _buildFilterButton(context, 'All'),
+                          _buildFilterButton(context, 'Pending'),
+                          _buildFilterButton(context, 'Completed'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Assigned Areas List
+                    Expanded(
+                      child: filteredList.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No results found',
+                                style: TextStyle(
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
+                          : ListView.builder(
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: filteredList.length,
+                              itemBuilder: (context, index) {
+                                final area = filteredList[index];
+                                final isCompleted =
+                                    area['status'] == 'Completed';
+                                return _buildAreaCard(
+                                  context,
+                                  area,
+                                  isCompleted,
+                                  colors,
+                                );
+                              },
+                            ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-
-              // Assigned Areas List
-              Expanded(
-                child: filteredList.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No results found',
-                          style: TextStyle(
-                            color: colors.primary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      )
-                    : ListView.builder(
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: filteredList.length,
-                        itemBuilder: (context, index) {
-                          final area = filteredList[index];
-                          final isCompleted = area['status'] == 'Completed';
-                          return _buildAreaCard(
-                            context,
-                            area,
-                            isCompleted,
-                            colors,
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  // Filter Button Widget
   Widget _buildFilterButton(BuildContext context, String label) {
     final colors = Theme.of(context).colorScheme;
     final provider = Provider.of<AssignedAreaProvider>(context);
@@ -112,21 +141,6 @@ class AssignedAreaPage extends StatelessWidget {
           color: selected ? colors.primary : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: colors.primary),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: colors.primary.withOpacity(0.25),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
@@ -146,7 +160,6 @@ class AssignedAreaPage extends StatelessWidget {
     );
   }
 
-  // Area Card Widget
   Widget _buildAreaCard(
     BuildContext context,
     Map<String, String> area,
@@ -177,16 +190,16 @@ class AssignedAreaPage extends StatelessWidget {
           child: Icon(Icons.location_on, color: colors.primary),
         ),
         title: Text(
-          area['name']!,
+          area['ownerName']!, // use ownerName from backend
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: colors.primary,
             fontSize: 12,
           ),
         ),
-        subtitle: const Text(
-          'Magallanes Street',
-          style: TextStyle(color: Colors.grey),
+        subtitle: Text(
+          area['address'] ?? '', // dynamic address
+          style: const TextStyle(color: Colors.grey),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -197,8 +210,11 @@ class AssignedAreaPage extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => WaterReadingPage(
-                      areaName: area['name']!,
+                      areaName: area['ownerName']!,
+                      meterNumber: area['meterNumber']!,
                       isEditing: isCompleted,
+                      previousReading: area['lastReading'] ?? '-',
+                      address: area['address'] ?? '-',
                     ),
                   ),
                 );

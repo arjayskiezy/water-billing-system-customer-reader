@@ -29,7 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
     final String fullName =
         "${authProvider.firstName ?? ''} ${authProvider.lastName ?? ''}".trim();
-    final String uid = authProvider.uid ?? "Unknown UID";
+    final String readerCode = authProvider.readerCode ?? "Unknown readerCode";
 
     return Scaffold(
       appBar: AppBar(
@@ -79,7 +79,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ),
                           Text(
-                            'UID: $uid',
+                            'readerCode: $readerCode',
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontSize: 12,
                             ),
