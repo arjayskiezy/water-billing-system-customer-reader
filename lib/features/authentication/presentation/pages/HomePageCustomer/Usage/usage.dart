@@ -98,7 +98,7 @@ class BillBreakdownPage extends StatelessWidget {
                     ),
                   ),
                   billingRow(
-                    'Water Consumption',
+                    'Latest Water Consumption',
                     '₱${provider.waterConsumption.toStringAsFixed(2)}',
                   ),
                   billingRow(

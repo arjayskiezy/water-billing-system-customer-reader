@@ -41,7 +41,7 @@ class BillBreakdownProvider extends ChangeNotifier {
     try {
       print('Fetching bill for user: $accountNumber'); // Debug start
       final data = await ApiService.get(
-        '/bills/$accountNumber',
+        '/customer/bills/$accountNumber',
       ); // Make sure userId is included
 
       print('Raw API response: $data'); // Debug raw JSON
