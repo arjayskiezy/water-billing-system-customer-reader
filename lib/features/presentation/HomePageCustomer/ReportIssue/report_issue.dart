@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/CustomerProviders/report_issue_provider.dart';
+import '../../../providers/LoginProvider/auth_provider.dart';
 
 class ReportIssuePage extends StatelessWidget {
   const ReportIssuePage({super.key});
@@ -9,6 +10,7 @@ class ReportIssuePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<ReportIssueProvider>(context);
     final colors = Theme.of(context).colorScheme;
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     final issueTitles = [
       'No Water',
@@ -107,7 +109,7 @@ class ReportIssuePage extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: provider.isSubmitting
                   ? null
-                  : () => provider.submitIssue(context),
+                  : () => provider.submitIssue(context, authProvider.accountNumber!),
               icon: provider.isSubmitting
                   ? const SizedBox(
                       width: 18,

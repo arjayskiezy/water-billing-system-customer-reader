@@ -195,7 +195,7 @@ class _ReaderDashboardPageState extends State<ReaderDashboardPage> {
           Row(
             children: [
               CircleAvatar(
-                radius: 34,
+                radius: 24,
                 backgroundColor: Colors.white.withOpacity(0.25),
                 child: Text(
                   fullName.isNotEmpty

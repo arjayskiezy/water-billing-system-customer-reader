@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../api/api.dart';
+import 'dart:convert';
 
 class ReportIssueProvider extends ChangeNotifier {
   // --- Fields ---
@@ -46,7 +48,7 @@ class ReportIssueProvider extends ChangeNotifier {
   }
 
   // --- Submit Issue ---
-  Future<void> submitIssue(BuildContext context) async {
+  Future<void> submitIssue(BuildContext context, String accountNumber) async {
     if (_selectedTitle == null || _description.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -61,20 +63,36 @@ class ReportIssueProvider extends ChangeNotifier {
     _isSubmitting = true;
     notifyListeners();
 
-    // Simulated delay (replace with backend API call)
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final response = await ApiService.post(
+        '/customer/report/create/$accountNumber',
+        {'title': _selectedTitle, 'description': _description},
+      );
+
+      if (response.statusCode == 201) {
+        // success
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Issue submitted successfully!')),
+        );
+
+        // Reset fields
+        _selectedTitle = null;
+        _description = '';
+        _attachment = null;
+        notifyListeners();
+      } else {
+        final body = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(body['message'] ?? 'Submission failed')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
 
     _isSubmitting = false;
-    notifyListeners();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Issue submitted successfully!')),
-    );
-
-    // Reset fields
-    _selectedTitle = null;
-    _description = '';
-    _attachment = null;
     notifyListeners();
   }
 }
