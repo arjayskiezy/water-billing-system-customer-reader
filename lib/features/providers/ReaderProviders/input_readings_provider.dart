@@ -1,51 +1,61 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../api/api.dart';
 import '../../database/database_helper.dart';
-import 'storage_provider.dart';
+import 'settings_profile.dart';
 
 class WaterReadingProvider extends ChangeNotifier {
-  final readingController = TextEditingController();
-  final notesController = TextEditingController();
-  File? meterPhoto;
+  // ----------------- Controllers -----------------
+  final TextEditingController readingController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
 
+  File? meterPhoto;
   bool isSaving = false;
 
+  // ----------------- Initialize -----------------
   void initializeReading(String value) {
     readingController.text = value;
   }
 
-  /// Initialize the reading controller with the latest local reading for the meter if present.
-  /// Prefers the most recent reading saved locally (unsynced or synced).
+  /// Load latest reading for a meter from local DB (unsynced or synced)
   Future<void> initializeReadingForMeter(String meterNumber) async {
     try {
       final db = DatabaseHelper();
       final latest = await db.getLatestReadingForMeter(meterNumber);
-      // latest comes from `water_readings` table; use the `reading` column
+
       if (latest != null && latest['reading'] != null) {
         readingController.text = latest['reading'].toString();
       } else {
         readingController.clear();
       }
-    } catch (e) {
-      // If DB fails, fallback to empty
+    } catch (_) {
       readingController.clear();
     }
     notifyListeners();
   }
 
-  void pickPhoto() {
-    // implement photo picker logic
-    notifyListeners();
+  // ----------------- Pick Photo -----------------
+  Future<void> pickPhoto() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1024, // compress to reduce Base64 size
+      maxHeight: 1024,
+      imageQuality: 70,
+    );
+
+    if (picked != null) {
+      meterPhoto = File(picked.path);
+      notifyListeners();
+    }
   }
 
-  // --------------------------------------------------
-  // UNIFIED SAVE READING FLOW
-  // --------------------------------------------------
-  // Saves locally
+  // ----------------- Save Reading -----------------
   Future<void> saveReading(
     BuildContext context, {
     required String meterNumber,
@@ -62,24 +72,18 @@ class WaterReadingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await _saveLocally(meterNumber: meterNumber, readerCode: readerCode);
 
-      await _saveLocally(
-        meterNumber: meterNumber,
-        readerCode: readerCode,
-      );
-
-      // Refresh storage stats so offline counters update immediately
+      // Refresh storage stats
       try {
         final storage = Provider.of<StorageProvider>(context, listen: false);
         await storage.refreshStats();
-      } catch (_) {
-        // ignore if storage provider not available
-      }
+      } catch (_) {}
 
       _clearInputs();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text("Error saving reading: $e")),
       );
     } finally {
       isSaving = false;
@@ -87,9 +91,7 @@ class WaterReadingProvider extends ChangeNotifier {
     }
   }
 
-  // --------------------------------------------------
-  // (1) SAVE LOCALLY - Save to water_readings table
-  // --------------------------------------------------
+  // ----------------- Private Local Save -----------------
   Future<void> _saveLocally({
     required String meterNumber,
     required String readerCode,
@@ -101,26 +103,25 @@ class WaterReadingProvider extends ChangeNotifier {
       "readerCode": readerCode,
       "reading": readingController.text,
       "notes": notesController.text,
-      "img": meterPhoto != null ? meterPhoto!.readAsBytesSync() : null,
+      "img": meterPhoto != null ? await meterPhoto!.readAsBytes() : null,
       "timestamp": DateTime.now().toIso8601String(),
-      "synced": 0, // Mark as unsynced
+      "synced": 0,
     };
 
     await db.insertWaterReading(entry);
 
-    // Update the assigned_areas table to mark this meter as completed
+    // Mark assigned area as completed
     try {
-      await db.markAreaCompleted(meterNumber, lastReading: readingController.text);
+      await db.markAreaCompleted(
+        meterNumber,
+        lastReading: readingController.text,
+      );
     } catch (e) {
-      // Don't fail the save flow if updating the assigned area fails.
-      print('Could not update assigned area status: $e');
+      print('Could not update assigned area: $e');
     }
   }
 
-
-  // --------------------------------------------------
-  // CLEAR INPUTS
-  // --------------------------------------------------
+  // ----------------- Clear Inputs -----------------
   void _clearInputs() {
     readingController.clear();
     notesController.clear();
@@ -128,22 +129,20 @@ class WaterReadingProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // --------------------------------------------------
-  // SYNC PENDING READINGS (called during Sync Now)
-  // Returns true if all readings synced successfully, false if any failed
-  // --------------------------------------------------
+  // ----------------- Sync Pending Readings -----------------
+  /// Returns true if all readings synced successfully.
+  /// If some failed, returns false and prints failures.
   Future<bool> syncPendingReadings({StorageProvider? storageProvider}) async {
     final db = DatabaseHelper();
     final pending = await db.getQueuedReadings(onlyUnsynced: true);
 
-    // If no pending readings, consider it a successful sync
     if (pending.isEmpty) {
       print("✅ No pending readings to sync");
       return true;
     }
 
     final syncedIds = <int>[];
-    bool anyFailed = false;
+    final failedReadings = <Map<String, dynamic>>[];
 
     for (final row in pending) {
       try {
@@ -152,45 +151,53 @@ class WaterReadingProvider extends ChangeNotifier {
           "meterNumber": row["meterNumber"],
           "currentReading": row["reading"],
           "notes": row["notes"],
-          "img": row["img"] != null ? base64Encode(row["img"]) : null,
+          "img": row["img"] != null
+              ? base64Encode(row["img"] as Uint8List)
+              : null,
         };
 
-        final response =
-            await ApiService.post('/reader/reading/submit', payload);
+        final response = await ApiService.post(
+          '/reader/reading/submit',
+          payload,
+        );
         final data = jsonDecode(response.body);
 
         if (response.statusCode == 200 && data["success"] == true) {
-          // Mark for sync after successful upload
-          syncedIds.add(row["id"]);
+          syncedIds.add(row["id"] as int);
         } else {
-          anyFailed = true;
-          print("❌ Reading sync failed: ${data["message"]}");
-          break;
+          failedReadings.add(row);
+          print("❌ Sync failed for meter ${row["meterNumber"]}: ${data["message"]}");
         }
       } catch (e) {
-        // If any fail, stop sync so it's safe
-        anyFailed = true;
-        print("❌ Reading sync error: $e");
-        break;
+        failedReadings.add(row);
+        print("❌ Sync error for meter ${row["meterNumber"]}: $e");
       }
     }
 
-    // Update all successfully synced readings
     if (syncedIds.isNotEmpty) {
       await db.markReadingsAsSynced(syncedIds);
       print("✅ ${syncedIds.length} readings synced");
-      // Refresh storage stats if provider passed
       try {
         if (storageProvider != null) {
           await storageProvider.refreshStats();
           storageProvider.markSynced();
         }
-      } catch (e) {
-        // ignore errors from storage provider
-      }
+      } catch (_) {}
     }
 
-    // Return true only if all pending readings were synced
-    return !anyFailed && syncedIds.length == pending.length;
+    if (failedReadings.isNotEmpty) {
+      print("⚠️ ${failedReadings.length} readings failed to sync");
+      return false;
+    }
+
+    return true;
+  }
+
+  // ----------------- Dispose -----------------
+  @override
+  void dispose() {
+    readingController.dispose();
+    notesController.dispose();
+    super.dispose();
   }
 }

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // static const String baseUrl = 'http://192.168.1.50:8080/mobile';
-   static const String baseUrl = 'http://192.168.175.236:8080/mobile';
+   static const String baseUrl = 'http://192.168.175.149:8080/mobile';
   // --- POST request ---
   static Future<http.Response> post(
     String endpoint,

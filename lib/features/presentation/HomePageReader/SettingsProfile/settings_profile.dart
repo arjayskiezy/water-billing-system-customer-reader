@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../../LoginPage/login_page.dart';
 import '../../../providers/LoginProvider/auth_provider.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/ReaderProviders/storage_provider.dart';
+import '../../../providers/ReaderProviders/settings_profile.dart';
+import '../../../providers/ReaderProviders/input_readings_provider.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -26,6 +27,7 @@ class _SettingsPageState extends State<SettingsPage> {
     final theme = Theme.of(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final storageProvider = Provider.of<StorageProvider>(context);
+    final waterReadingProvider = Provider.of<WaterReadingProvider>(context);
 
     final String fullName =
         "${authProvider.firstName ?? ''} ${authProvider.lastName ?? ''}".trim();
@@ -42,72 +44,6 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // User Info Card (updated)
-            Card(
-              elevation: 5,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              margin: const EdgeInsets.only(bottom: 24),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: theme.primaryColor,
-                      child: Text(
-                        '${(authProvider.firstName ?? '').isNotEmpty ? authProvider.firstName![0].toUpperCase() : ''}'
-                        '${(authProvider.lastName ?? '').isNotEmpty ? authProvider.lastName![0].toUpperCase() : ''}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            fullName.isNotEmpty ? fullName : "Reader User",
-                            style: theme.textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          Text(
-                            'readerCode: $readerCode',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade100,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Active',
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
 
             // App Settings
             Text(
@@ -197,11 +133,12 @@ class _SettingsPageState extends State<SettingsPage> {
             ElevatedButton.icon(
               onPressed: () => _showConfirmationDialog(
                 context,
-                title: 'Force Sync',
+                title: 'Sync All Data',
                 content: 'Do you want to force sync all data now?',
                 onConfirm: () {
                   Navigator.pop(context);
-                  storageProvider.markSynced(); // ✅ update last sync time
+                  waterReadingProvider.syncPendingReadings();
+                  storageProvider.markSynced();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Data synced successfully!')),
                   );
@@ -209,7 +146,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
 
               icon: const Icon(Icons.sync),
-              label: const Text('Force Sync All Data'),
+              label: const Text('Sync All Data'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.primary,
                 foregroundColor: Colors.white,

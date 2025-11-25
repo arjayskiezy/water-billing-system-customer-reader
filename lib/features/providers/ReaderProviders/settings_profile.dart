@@ -35,6 +35,7 @@ class StorageProvider extends ChangeNotifier {
 
   void markSynced() {
     _lastSync = DateTime.now();
+    
     // When marking synced, refresh counts/storage
     refreshStats();
     notifyListeners();

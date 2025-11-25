@@ -13,8 +13,8 @@ import 'features/providers/CustomerProviders/announcement_provider.dart';
 import 'features/providers/CustomerProviders/report_issue_provider.dart';
 import 'features/providers/ReaderProviders/reader_dashboard_provider.dart';
 import 'features/providers/ReaderProviders/assigned_area_provider.dart';
-import 'features/providers/ReaderProviders/water_reading_provider.dart';
-import 'features/providers/ReaderProviders/storage_provider.dart';
+import 'features/providers/ReaderProviders/input_readings_provider.dart';
+import 'features/providers/ReaderProviders/settings_profile.dart';
 
 void main() {
   runApp(
