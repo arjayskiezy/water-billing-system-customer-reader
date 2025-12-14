@@ -26,15 +26,14 @@ class AssignedAreaProvider extends ChangeNotifier {
       final matchesStatus =
           _selectedFilter == 'All' || area['status'] == _selectedFilter;
 
-      final matchesSearch = area['meterNumber']!
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()) ||
-          area['ownerName']!
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase()) ||
-          area['address']!
-              .toLowerCase()
-              .contains(_searchQuery.toLowerCase());
+      final matchesSearch =
+          area['meterNumber']!.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          area['ownerName']!.toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          area['address']!.toLowerCase().contains(_searchQuery.toLowerCase());
 
       return matchesStatus && matchesSearch;
     }).toList();
@@ -56,35 +55,46 @@ class AssignedAreaProvider extends ChangeNotifier {
 
   /// Fetch assigned areas for a reader
   /// - [forceRefresh] bypasses cache if true
-  Future<void> fetchAssignedAreas(int readerId, {bool forceRefresh = false}) async {
+  Future<void> fetchAssignedAreas(
+    int readerId, {
+    bool forceRefresh = false,
+  }) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
+      bool shouldFetchFromApi = forceRefresh;
+
       // ---------------- Load cached data first if not forcing ----------------
       if (!forceRefresh) {
         final cached = await _dbHelper.getAssignedAreas();
         if (cached.isNotEmpty) {
           _assignedAreas = cached.map(_mapAssignedArea).toList();
           notifyListeners(); // Update UI immediately with cached data
+        } else {
+          shouldFetchFromApi = true; // no cache, must fetch
         }
       }
 
-      // ---------------- Fetch from API ----------------
-      final response =
-          await ApiService.get('/reader/assigned-area/reader/$readerId');
+      // ---------------- Fetch from API only if needed ----------------
+      if (shouldFetchFromApi) {
+        final response = await ApiService.get(
+          '/reader/assigned-area/reader/$readerId',
+        );
 
-      final List<dynamic> data =
-          (response is List ? response : (response?['data'] ?? [])) as List<dynamic>;
+        final List<dynamic> data =
+            (response is List ? response : (response?['data'] ?? []))
+                as List<dynamic>;
 
-      // Map API data to our structure
-      _assignedAreas = data.map(_mapAssignedArea).toList();
+        // Map API data to our structure
+        _assignedAreas = data.map(_mapAssignedArea).toList();
 
-      // Save/update to SQLite cache
-      await _dbHelper.upsertAssignedAreas(_assignedAreas);
+        // Save/update to SQLite cache
+        await _dbHelper.upsertAssignedAreas(_assignedAreas);
 
-      notifyListeners();
+        notifyListeners();
+      }
     } catch (e) {
       _error = e.toString();
       // If API fails and list is empty, load from cache

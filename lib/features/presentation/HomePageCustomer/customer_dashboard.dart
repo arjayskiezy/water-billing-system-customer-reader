@@ -254,7 +254,7 @@ class _DashboardPageState extends State<DashboardPage> {
             context,
             title: 'Usage',
             subtitle:
-                '${billingProvider.lastMonthUsage.toStringAsFixed(3)} m³\nLast Month',
+                'Last Month',
             icon: LucideIcons.droplets,
             onTap: () => Navigator.push(
               context,

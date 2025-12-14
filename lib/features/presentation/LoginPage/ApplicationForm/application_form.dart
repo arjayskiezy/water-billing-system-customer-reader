@@ -3,58 +3,16 @@ import 'package:provider/provider.dart';
 import '../../../providers/LoginProvider/water_application_provider.dart';
 import '../login_page.dart';
 
-class WaterApplicationFormPage extends StatefulWidget {
+class WaterApplicationFormPage extends StatelessWidget {
   const WaterApplicationFormPage({super.key});
-
-  @override
-  State<WaterApplicationFormPage> createState() =>
-      _WaterApplicationFormPageState();
-}
-
-class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
-  late WaterApplicationProvider provider;
-  final _formKey = GlobalKey<FormState>();
-
-  // Controllers
-  final _emailController = TextEditingController();
-  final _applicantController = TextEditingController();
-  final _spouseController = TextEditingController();
-  final _presentAddressController = TextEditingController();
-  final _previousAddressController = TextEditingController();
-  final _faucetLocationController = TextEditingController();
-  final _additionalFaucetController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    provider = WaterApplicationProvider();
-    _emailController.text = provider.email;
-    _applicantController.text = provider.applicantName;
-    _spouseController.text = provider.spouseName;
-    _presentAddressController.text = provider.presentAddress;
-    _previousAddressController.text = provider.previousAddress;
-    _faucetLocationController.text = provider.faucetLocation;
-    _additionalFaucetController.text = provider.additionalFaucet;
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _applicantController.dispose();
-    _spouseController.dispose();
-    _presentAddressController.dispose();
-    _previousAddressController.dispose();
-    _faucetLocationController.dispose();
-    _additionalFaucetController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final _formKey = GlobalKey<FormState>();
 
-    return ChangeNotifierProvider<WaterApplicationProvider>.value(
-      value: provider,
+    return ChangeNotifierProvider(
+      create: (_) => WaterApplicationProvider(),
       child: Consumer<WaterApplicationProvider>(
         builder: (context, provider, _) {
           List<Widget> formSteps() => [
@@ -62,7 +20,7 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
             Column(
               children: [
                 TextFormField(
-                  controller: _emailController,
+                  initialValue: provider.email,
                   onChanged: provider.setEmail,
                   decoration: InputDecoration(
                     labelText: 'Email Address',
@@ -82,10 +40,10 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _applicantController,
-                  onChanged: provider.setApplicantName,
+                  initialValue: provider.applicantFirstName,
+                  onChanged: provider.setApplicantFirstName,
                   decoration: InputDecoration(
-                    labelText: 'Name of Applicant',
+                    labelText: 'Applicant First Name',
                     prefixIcon: Icon(Icons.person, color: colors.primary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -93,19 +51,44 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter applicant name';
+                      return 'Please enter first name';
                     }
                     return null;
                   },
                 ),
+
                 const SizedBox(height: 16),
+
                 TextFormField(
-                  controller: _spouseController,
+                  initialValue: provider.applicantSecondName,
+                  onChanged: provider.setApplicantSecondName,
+                  decoration: InputDecoration(
+                    labelText: 'Applicant Last Name',
+                    prefixIcon: Icon(
+                      Icons.person_outline,
+                      color: colors.primary,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter last name';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  initialValue: provider.spouseName,
                   onChanged: provider.setSpouseName,
                   decoration: InputDecoration(
                     labelText: 'Name of Spouse',
                     prefixIcon: Icon(
-                      Icons.person_outline,
+                      Icons.person_3_sharp,
                       color: colors.primary,
                     ),
                     border: OutlineInputBorder(
@@ -115,7 +98,7 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _presentAddressController,
+                  initialValue: provider.presentAddress,
                   onChanged: provider.setPresentAddress,
                   decoration: InputDecoration(
                     labelText: 'Present Address',
@@ -133,7 +116,7 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _previousAddressController,
+                  initialValue: provider.previousAddress,
                   onChanged: provider.setPreviousAddress,
                   decoration: InputDecoration(
                     labelText: 'Previous Address',
@@ -213,29 +196,29 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _faucetLocationController,
-                  onChanged: provider.setFaucetLocation,
+                  initialValue: provider.meterLocation,
+                  onChanged: provider.setMeterLocation,
                   decoration: InputDecoration(
-                    labelText: 'Faucet Location',
-                    prefixIcon: Icon(Icons.water, color: colors.primary),
+                    labelText: 'Meter Location',
+                    prefixIcon: Icon(Icons.water_damage_rounded, color: colors.primary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please Enter Faucet Location';
+                      return 'Please enter meter location';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _additionalFaucetController,
-                  onChanged: provider.setAdditionalFaucet,
+                  initialValue: provider.meterNumber,
+                  onChanged: provider.setMeterNumber,
                   decoration: InputDecoration(
-                    labelText: 'Additional Faucet (Optional)',
-                    prefixIcon: Icon(Icons.add, color: colors.primary),
+                    labelText: 'Meter Number',
+                    prefixIcon: Icon(Icons.numbers_sharp, color: colors.primary),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -258,12 +241,11 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
                     ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          provider.submitForm();
+                          provider.submitForm(context);
 
                           showDialog(
                             context: context,
-                            barrierDismissible:
-                                false, // Prevent closing by tapping outside
+                            barrierDismissible: false,
                             builder: (context) => AlertDialog(
                               title: const Text(
                                 'Next Steps',
@@ -290,7 +272,6 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    SizedBox(height: 8),
                                     ListTile(
                                       leading: Icon(
                                         Icons.check_circle_outline,
@@ -338,18 +319,15 @@ class _WaterApplicationFormPageState extends State<WaterApplicationFormPage> {
                                   ],
                                 ),
                               ),
-
                               actions: [
                                 TextButton(
                                   onPressed: () {
-                                    Navigator.of(
-                                      context,
-                                    ).pop(); // Close the dialog
+                                    Navigator.of(context).pop();
                                     Navigator.of(context).pushReplacement(
                                       MaterialPageRoute(
                                         builder: (context) => const LoginPage(),
                                       ),
-                                    ); // Navigate to LoginPage
+                                    );
                                   },
                                   child: const Text('OK'),
                                 ),

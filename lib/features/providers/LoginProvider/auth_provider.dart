@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../shared/customer&reader_storage.dart';
 import '../../api/api.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 enum UserRole { customer, reader }
 
@@ -13,6 +14,7 @@ class AuthProvider extends ChangeNotifier {
   bool _loggedIn = false;
   bool _isLoading = true;
   UserRole? _role;
+  bool _tokenSynced = false;
 
   // User data
   String? _firstName;
@@ -86,7 +88,9 @@ class AuthProvider extends ChangeNotifier {
     _meterNumber = _tryParseInt(userData['meterNumber'])?.toString();
     _readerCode = userData['readerCode'];
     _userId = userData['userId'];
-    _role = userData['role'] == 'customer' ? UserRole.customer : UserRole.reader;
+    _role = userData['role'] == 'customer'
+        ? UserRole.customer
+        : UserRole.reader;
   }
 
   /// Handle successful login response
@@ -116,6 +120,8 @@ class AuthProvider extends ChangeNotifier {
       userId: _userId,
       role: role,
     );
+
+    await syncDeviceToken(userId: _userId!);
 
     notifyListeners();
   }
@@ -147,6 +153,28 @@ class AuthProvider extends ChangeNotifier {
       return {'firstName': parts[0], 'lastName': ''};
     } else {
       return {'firstName': parts.first, 'lastName': parts.sublist(1).join(' ')};
+    }
+  }
+
+  Future<void> syncDeviceToken({required int userId}) async {
+    if (_tokenSynced) return; // avoid duplicates
+
+    final token = await FirebaseMessaging.instance.getToken();
+    if (token == null) return;
+
+    try {
+      final payload = {
+        'deviceToken': token,
+        'platform': 'android',
+        'userId': userId,
+      };
+
+      // Debug: print the payload
+      print('Sending device token payload: $payload');
+
+      await ApiService.post('/user/device-token', payload);
+    } catch (e) {
+      print('Error sending device token: $e');
     }
   }
 }

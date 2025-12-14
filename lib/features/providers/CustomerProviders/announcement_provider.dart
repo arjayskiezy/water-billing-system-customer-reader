@@ -1,46 +1,45 @@
 import 'package:flutter/foundation.dart';
+import '../../api/api.dart';
 
 class AnnouncementProvider extends ChangeNotifier {
-  final List<Map<String, dynamic>> _announcements = [
-    {
-      'title': 'Scheduled Maintenance',
-      'date': 'Sep 25, 2025',
-      'description':
-          'Water services will be temporarily unavailable from 10:00 AM to 2:00 PM due to scheduled maintenance.',
-      'unread': false,
-    },
-    {
-      'title': 'New Payment Options',
-      'date': 'Sep 20, 2025',
-      'description':
-          'Soonest we accept mobile payments via GCash and PayMaya for your convenience.',
-      'unread': true,
-    },
-    {
-      'title': 'Policy Update',
-      'date': 'Sep 15, 2025',
-      'description':
-          'The late payment fee policy has been updated. Please review your monthly statements for details.',
-      'unread': true,
-    },
-  ];
+  List<Map<String, dynamic>> _announcements = [];
 
   List<Map<String, dynamic>> get announcements => _announcements;
 
-  void markAllAsRead() {
-    for (var a in _announcements) {
-      a['unread'] = false;
+  /// Fetch announcements from backend
+  Future<void> fetchAnnouncements() async {
+    try {
+      final data = await ApiService.get('/customer/announcements');
+
+      if (data is List) {
+        _announcements = data.map<Map<String, dynamic>>((item) {
+          String type = "";
+          switch (item["type"] ?? "") {
+            case "maintenance":
+              type = "maintenance";
+              break;
+            case "general":
+              type = "general";
+              break;
+            case "system":
+              type = "system";
+              break;
+            default:
+              type = "other";
+          }
+
+          return {
+            "title": item["title"] ?? "",
+            "description": item["description"] ?? "",
+            "type": type,
+            "date": item["published"] ?? "",
+          };
+        }).toList();
+      }
+
+      notifyListeners();
+    } catch (e) {
+      print("Error fetching announcements: $e");
     }
-    notifyListeners();
-  }
-
-  void markAsRead(int index) {
-    _announcements[index]['unread'] = false;
-    notifyListeners();
-  }
-
-  void addAnnouncement(Map<String, dynamic> newAnnouncement) {
-    _announcements.insert(0, newAnnouncement);
-    notifyListeners();
   }
 }

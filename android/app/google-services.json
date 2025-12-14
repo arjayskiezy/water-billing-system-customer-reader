@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1047792775928",
+    "project_id": "gripometernotif",
+    "storage_bucket": "gripometernotif.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1047792775928:android:75d4fd306472d456ccc10d",
+        "android_client_info": {
+          "package_name": "com.example.water_project"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLM7_SU1sEZ_juPGoC4gk67JoRgQi3ClU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
