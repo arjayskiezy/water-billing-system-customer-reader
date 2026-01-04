@@ -58,6 +58,7 @@ class AuthProvider extends ChangeNotifier {
         'password': password,
       });
 
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['status'] == 'success') {

@@ -20,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isPasswordObscured = true;
 
   Future<void> _login() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -46,7 +47,6 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } else if (role == 'customer') {
-        // ✅ Change 'user' → 'customer'
         if (mounted) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const DashboardPage()),
@@ -137,13 +137,27 @@ class _LoginPageState extends State<LoginPage> {
 
               TextField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: _isPasswordObscured, // 👈 Use the variable here
                 decoration: InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   prefixIcon: Icon(Icons.lock, color: colors.primary),
+                  // 👈 Add the suffixIcon below
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _isPasswordObscured
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: colors.primary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _isPasswordObscured = !_isPasswordObscured;
+                      });
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
