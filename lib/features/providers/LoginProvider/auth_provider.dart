@@ -169,7 +169,6 @@ class AuthProvider extends ChangeNotifier {
         'userId': userId,
       };
 
-      // Debug: print the payload
       print('Sending device token payload: $payload');
 
       await ApiService.post('/user/device-token', payload);
