@@ -168,9 +168,9 @@ class WaterApplicationProvider extends ChangeNotifier {
         _currentStep = 0;
         notifyListeners();
       } else {
-        final body = response.body.isNotEmpty ? jsonDecode(response.body) : {};
+        final data = response.data;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(body['message'] ?? 'Submission failed')),
+          SnackBar(content: Text(data['message'] ?? 'Submission failed')),
         );
       }
     } catch (e) {

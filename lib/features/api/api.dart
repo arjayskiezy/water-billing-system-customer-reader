@@ -1,30 +1,39 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import './interceptor/auth_interceptor.dart'; // Ensure correct path
 
 class ApiService {
-  // static const String baseUrl = 'http://192.168.1.50:8080/mobile';
   static const String baseUrl = 'https://vinita-nonobstetrical-nondurably.ngrok-free.dev/api/mobile';
 
-  static Future<http.Response> post(
-    String endpoint,
-    Map<String, dynamic> body,
-  ) {
-    final url = Uri.parse('$baseUrl$endpoint');
-    return http.post(
-      url,
+  // Create a Dio instance
+  static final Dio _dio = Dio(
+    BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 5),
+      receiveTimeout: const Duration(seconds: 3),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+    ),
+  )..interceptors.add(AuthInterceptor()); // Attach your interceptor here!
+
+  // POST method
+  static Future<Response> post(String endpoint, Map<String, dynamic> body) async {
+    try {
+      return await _dio.post(endpoint, data: body);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 
+  // GET method
   static Future<dynamic> get(String endpoint) async {
-    final url = Uri.parse('$baseUrl$endpoint');
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body); 
-    } else {
-      throw Exception('Failed to fetch data: ${response.statusCode}');
+    try {
+      final response = await _dio.get(endpoint);
+      return response.data; // Dio automatically decodes JSON
+    } on DioException catch (e) {
+      throw _handleError(e);
     }
+  }
+
+  static Exception _handleError(DioException e) {
+    return Exception(e.response?.data['message'] ?? 'Connection Error');
   }
 }

@@ -69,8 +69,8 @@ class ReportIssueProvider extends ChangeNotifier {
         {'title': _selectedTitle, 'description': _description},
       );
 
+      // 1. Dio uses 'statusCode', but usually we check if the response is successful
       if (response.statusCode == 201) {
-        // success
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Issue submitted successfully!')),
         );
@@ -80,16 +80,11 @@ class ReportIssueProvider extends ChangeNotifier {
         _description = '';
         _attachment = null;
         notifyListeners();
-      } else {
-        final body = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(body['message'] ?? 'Submission failed')),
-        );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
 
     _isSubmitting = false;

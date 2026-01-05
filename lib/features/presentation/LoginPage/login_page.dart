@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
         accountNumber: accountNumber,
         password: password,
       );
-
+      print(role);
       if (role == 'reader') {
         if (mounted) {
           Navigator.of(context).pushReplacement(
@@ -53,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } else {
-        _showErrorDialog('Invalid account number or password.');
+        _showErrorDialog('A technical error occurred. Please try again.');
       }
     } catch (e) {
       _showErrorDialog('Login failed. Please try again.\nError: $e');

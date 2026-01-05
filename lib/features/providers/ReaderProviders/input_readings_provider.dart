@@ -160,7 +160,7 @@ class WaterReadingProvider extends ChangeNotifier {
           '/reader/reading/submit',
           payload,
         );
-        final data = jsonDecode(response.body);
+        final data = response.data;
 
         if (response.statusCode == 200 && data["success"] == true) {
           syncedIds.add(row["id"] as int);

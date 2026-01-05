@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../shared/customer&reader_storage.dart';
 import '../../api/api.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import '../../api/interceptor/secure_storage.dart';
 
 enum UserRole { customer, reader }
 
@@ -58,15 +59,18 @@ class AuthProvider extends ChangeNotifier {
         'password': password,
       });
 
+      final data = response.data; 
+      final String? token = data['token']; 
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['status'] == 'success') {
-          await _handleLoginSuccess(data);
-          return data['role'];
-        }
+      print('Response : $data');
+      if (token != null) {
+        await TokenStorage.saveToken(token);
+        
+        await _handleLoginSuccess(data);
+      }else {
+        return 'invalid_credentials';
       }
-      return 'error';
+      return data['role'];
     } catch (e) {
       print('Login error: $e');
       return 'error';
@@ -77,6 +81,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> logout() async {
     _clearUserData();
     await _storage.clearUser();
+    await TokenStorage.deleteToken();
     notifyListeners();
   }
 
@@ -122,7 +127,7 @@ class AuthProvider extends ChangeNotifier {
       role: role,
     );
 
-    await syncDeviceToken(userId: _userId!);
+    // await syncDeviceToken(userId: _userId!);
 
     notifyListeners();
   }
