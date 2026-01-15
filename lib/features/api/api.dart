@@ -2,7 +2,8 @@ import 'package:dio/dio.dart';
 import './interceptor/auth_interceptor.dart'; // Ensure correct path
 
 class ApiService {
-  static const String baseUrl = 'https://vinita-nonobstetrical-nondurably.ngrok-free.dev/api/mobile';
+ static const String baseUrl = 'https://vinita-nonobstetrical-nondurably.ngrok-free.dev/api/mobile';
+  // static const String baseUrl = 'https://pajamaed-arjun-phrasally.ngrok-free.dev/api/mobile';
 
   // Create a Dio instance
   static final Dio _dio = Dio(
